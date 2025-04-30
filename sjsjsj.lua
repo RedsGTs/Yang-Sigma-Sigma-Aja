@@ -1,4 +1,4 @@
--- Job ID Hub V3 (Modern UI with Toggle Icon)
+-- Job ID Hub V3 (Modern UI with Toggle Icon + Minimize Button)
 
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
@@ -24,7 +24,7 @@ toggleIcon.Name = "ToggleIcon"
 toggleIcon.Size = UDim2.new(0, 40, 0, 40)
 toggleIcon.Position = UDim2.new(0, 10, 0, 10)
 toggleIcon.BackgroundTransparency = 1
-toggleIcon.Image = "rbxassetid://<7205866972>" -- replace with uploaded image ID
+toggleIcon.Image = "rbxassetid://<1049060234>" -- Replace with your image ID
 
 -- Main Frame
 local mainFrame = Instance.new("Frame", gui)
@@ -35,6 +35,17 @@ mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BackgroundTransparency = 0.2
 mainFrame.BorderSizePixel = 0
 mainFrame.Visible = true
+
+-- Minimize Button
+local minimizeBtn = Instance.new("TextButton", mainFrame)
+minimizeBtn.Name = "MinimizeButton"
+minimizeBtn.Size = UDim2.new(0, 24, 0, 24)
+minimizeBtn.Position = UDim2.new(1, -28, 0, 4)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+minimizeBtn.Text = "-"
+minimizeBtn.Font = Enum.Font.SourceSansBold
+minimizeBtn.TextSize = 20
+minimizeBtn.TextColor3 = Color3.new(1, 1, 1)
 
 -- Uptime Label
 local uptimeLabel = Instance.new("TextLabel", mainFrame)
@@ -55,7 +66,6 @@ jobIdLabel.BackgroundTransparency = 1
 jobIdLabel.TextColor3 = Color3.new(1, 1, 1)
 jobIdLabel.Font = Enum.Font.SourceSansBold
 jobIdLabel.TextSize = 16
-jobIdLabel.TextXAlignment = Enum.TextXAlignment.Left
 jobIdLabel.Text = "Job ID: " .. (game.JobId ~= "" and game.JobId or "Unavailable")
 
 -- Input Box
@@ -98,7 +108,7 @@ randomBtn.TextSize = 16
 randomBtn.TextColor3 = Color3.new(1, 1, 1)
 randomBtn.BackgroundColor3 = Color3.fromRGB(100, 80, 60)
 
--- Actions
+-- Button Logic
 copyBtn.MouseButton1Click:Connect(function()
 	if setclipboard then setclipboard(game.JobId) end
 end)
@@ -122,14 +132,27 @@ randomBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Toggle UI with Icon
+-- Toggle entire UI with top-left icon
 local shown = true
 toggleIcon.MouseButton1Click:Connect(function()
 	shown = not shown
 	mainFrame.Visible = shown
 end)
 
--- Update uptime
+-- Minimize/Expand content inside MainFrame
+local isMinimized = false
+minimizeBtn.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	for _, child in ipairs(mainFrame:GetChildren()) do
+		if child:IsA("TextLabel") or child:IsA("TextBox") or child:IsA("TextButton") then
+			if child.Name ~= "MinimizeButton" then
+				child.Visible = not isMinimized
+			end
+		end
+	end
+end)
+
+-- Uptime updater
 task.spawn(function()
 	while true do
 		local seconds = math.floor(tick() - joinTime)

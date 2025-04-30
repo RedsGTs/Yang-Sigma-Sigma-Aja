@@ -1,4 +1,4 @@
--- Job ID Hub V2 (Delta Ready)
+-- Job ID Hub with Icon Minimize System
 
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
@@ -7,7 +7,7 @@ local player = Players.LocalPlayer
 local placeId = game.PlaceId
 local joinTime = tick()
 
--- Destroy existing GUI
+-- Cleanup
 if game.CoreGui:FindFirstChild("JobIDHub") then
 	game.CoreGui.JobIDHub:Destroy()
 end
@@ -17,6 +17,7 @@ local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "JobIDHub"
 gui.ResetOnSpawn = false
 
+-- Main UI Frame
 local mainFrame = Instance.new("Frame", gui)
 mainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
 mainFrame.Size = UDim2.new(0, 320, 0, 230)
@@ -33,6 +34,7 @@ minimizeBtn.Position = UDim2.new(1, -35, 0, 5)
 minimizeBtn.Text = "-"
 minimizeBtn.TextScaled = true
 minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+minimizeBtn.Name = "MinimizeBtn"
 
 -- Server Uptime
 local uptimeLabel = Instance.new("TextLabel", mainFrame)
@@ -45,7 +47,7 @@ uptimeLabel.TextSize = 14
 uptimeLabel.Text = "Uptime: 0s"
 uptimeLabel.TextXAlignment = Enum.TextXAlignment.Right
 
--- Job ID Display
+-- Job ID
 local jobIdLabel = Instance.new("TextLabel", mainFrame)
 jobIdLabel.Size = UDim2.new(1, -20, 0, 40)
 jobIdLabel.Position = UDim2.new(0, 10, 0, 40)
@@ -55,7 +57,7 @@ jobIdLabel.Font = Enum.Font.SourceSansBold
 jobIdLabel.TextSize = 16
 jobIdLabel.Text = "Job ID: " .. (game.JobId ~= "" and game.JobId or "Unavailable")
 
--- Input box for Job ID
+-- Job ID Input
 local jobIdInput = Instance.new("TextBox", mainFrame)
 jobIdInput.Size = UDim2.new(1, -20, 0, 30)
 jobIdInput.Position = UDim2.new(0, 10, 0, 90)
@@ -75,7 +77,7 @@ teleportBtn.TextSize = 16
 teleportBtn.TextColor3 = Color3.new(1, 1, 1)
 teleportBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 60)
 
--- Copy Job ID Button
+-- Copy Button
 local copyBtn = Instance.new("TextButton", mainFrame)
 copyBtn.Size = UDim2.new(0.5, -15, 0, 30)
 copyBtn.Position = UDim2.new(0, 10, 0, 170)
@@ -85,7 +87,7 @@ copyBtn.TextSize = 16
 copyBtn.TextColor3 = Color3.new(1, 1, 1)
 copyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
 
--- Join Random Server Button
+-- Random Button
 local randomBtn = Instance.new("TextButton", mainFrame)
 randomBtn.Size = UDim2.new(0.5, -15, 0, 30)
 randomBtn.Position = UDim2.new(0.5, 5, 0, 170)
@@ -95,14 +97,27 @@ randomBtn.TextSize = 16
 randomBtn.TextColor3 = Color3.new(1, 1, 1)
 randomBtn.BackgroundColor3 = Color3.fromRGB(100, 80, 60)
 
--- Copy Job ID
+-- Icon for minimized state
+local iconBtn = Instance.new("TextButton", gui)
+iconBtn.Size = UDim2.new(0, 80, 0, 30)
+iconBtn.Position = UDim2.new(0, 10, 0, 10)
+iconBtn.Text = "JobID Hub"
+iconBtn.Visible = false
+iconBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 80)
+iconBtn.TextColor3 = Color3.new(1,1,1)
+iconBtn.Font = Enum.Font.SourceSansBold
+iconBtn.TextSize = 14
+iconBtn.Name = "IconBtn"
+iconBtn.Active = true
+iconBtn.Draggable = true
+
+-- Button Actions
 copyBtn.MouseButton1Click:Connect(function()
 	if setclipboard then
 		setclipboard(game.JobId)
 	end
 end)
 
--- Teleport to input Job ID
 teleportBtn.MouseButton1Click:Connect(function()
 	local inputJob = jobIdInput.Text
 	if inputJob and inputJob ~= "" then
@@ -110,9 +125,8 @@ teleportBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Join Random Server
 randomBtn.MouseButton1Click:Connect(function()
-	local servers = game.HttpService:JSONDecode(
+	local servers = HttpService:JSONDecode(
 		game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100")
 	)
 	for _, server in pairs(servers.data) do
@@ -123,20 +137,19 @@ randomBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Minimize toggle
-local minimized = false
+-- Toggle to Icon
 minimizeBtn.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	for _, v in pairs(mainFrame:GetChildren()) do
-		if v:IsA("GuiObject") and v.Name ~= "MinimizeButton" then
-			v.Visible = not minimized
-		end
-	end
-	minimizeBtn.Text = minimized and "+" or "-"
-	mainFrame.Size = minimized and UDim2.new(0, 200, 0, 40) or UDim2.new(0, 320, 0, 230)
+	mainFrame.Visible = false
+	iconBtn.Visible = true
 end)
 
--- Server Uptime Timer
+-- Restore UI from icon
+iconBtn.MouseButton1Click:Connect(function()
+	mainFrame.Visible = true
+	iconBtn.Visible = false
+end)
+
+-- Uptime Counter
 task.spawn(function()
 	while true do
 		local seconds = math.floor(tick() - joinTime)

@@ -21,14 +21,18 @@ local toggleIcon = Instance.new("ImageButton", gui)
 toggleIcon.Size = UDim2.new(0, 40, 0, 40)
 toggleIcon.Position = UDim2.new(0, 10, 0.4, 0)
 toggleIcon.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-toggleIcon.Image = "rbxassetid://6031091002" -- Use a default icon (e.g., menu)
+toggleIcon.BackgroundTransparency = 0.2
+toggleIcon.Image = "rbxassetid://6031091002" -- icon
 toggleIcon.Name = "ToggleIcon"
+toggleIcon.Active = true
+toggleIcon.Draggable = true
 
--- Main Frame (initially visible)
+-- Main Frame
 local mainFrame = Instance.new("Frame", gui)
 mainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
 mainFrame.Size = UDim2.new(0, 320, 0, 230)
 mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+mainFrame.BackgroundTransparency = 0.5 -- semi-transparent
 mainFrame.BorderSizePixel = 0
 mainFrame.Name = "MainFrame"
 mainFrame.Active = true
@@ -127,7 +131,7 @@ randomBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Show/hide MainFrame via icon
+-- Show/hide MainFrame via toggle icon
 local shown = true
 local function toggleUI()
 	shown = not shown

@@ -29,15 +29,15 @@ mainFrame.Draggable = true
 local toggleBtn = Instance.new("TextButton", mainFrame)
 toggleBtn.Size = UDim2.new(0, 30, 0, 30)
 toggleBtn.Position = UDim2.new(1, -35, 0, 5)
-toggleBtn.Text = ""  -- Remove text
-toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+toggleBtn.Text = "Reds"  -- Remove text
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 toggleBtn.Name = "ToggleBtn"
 
 -- Add Image to Toggle Button
 local toggleLogo = Instance.new("ImageLabel", toggleBtn)
 toggleLogo.Size = UDim2.new(1, 0, 1, 0)  -- Make the logo fill the button size
 toggleLogo.Position = UDim2.new(0, 0, 0, 0)
-toggleLogo.Image = "rbxassetid://1234567890"  -- Replace with your image asset ID
+toggleLogo.Image = "rbxassetid://9180622670"  -- Replace with your image asset ID
 toggleLogo.BackgroundTransparency = 1  -- Make the background transparent
 
 -- Job ID Display

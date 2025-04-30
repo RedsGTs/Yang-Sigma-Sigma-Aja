@@ -1,4 +1,3 @@
-Thanks for the info — since you're using Delta (a Roblox executor), I’ll give you a hub UI script that works for injected environments (not Roblox Studio). This s
 
 
 ---

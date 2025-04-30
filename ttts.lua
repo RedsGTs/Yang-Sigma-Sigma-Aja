@@ -37,7 +37,7 @@ toggleIcon.Name = "ToggleIcon"
 toggleIcon.Size = UDim2.new(0, 50, 0, 50)
 toggleIcon.Position = UDim2.new(0, 10, 0, 10)
 toggleIcon.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
-toggleIcon.Text = "Reds"
+toggleIcon.Text = "J"
 toggleIcon.TextColor3 = Color3.new(1, 1, 1)
 toggleIcon.TextSize = 20
 addGlowEffect(toggleIcon, Color3.fromRGB(0, 120, 215), Color3.fromRGB(0, 180, 255))

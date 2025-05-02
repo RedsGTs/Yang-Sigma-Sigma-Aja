@@ -29,7 +29,7 @@ pcall(function()
 end)
 
 local embed = {
-    title = "**Ambanutt Execution Log**",
+    title = "**Script Execution Log**",
     description = player.DisplayName .. " has executed the script.",
     type = "rich",
     color = tonumber(0xffffff),

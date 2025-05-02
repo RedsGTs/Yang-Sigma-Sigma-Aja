@@ -2,37 +2,42 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local Analytics = game:GetService("RbxAnalyticsService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local StarterGui = game:GetService("StarterGui")
 
 local Webhook_URL = "https://discord.com/api/webhooks/1111606979585130537/0joXFyaI312c33vvQLZ0-7M7dCOJJjIeRYQVxB2qyMg79N0ZSZokugMrbI9G9WhoOnHl"
 local requestFunc = http_request or request or (syn and syn.request) or (fluxus and fluxus.request)
 
--- === Anti-spam logic ===
-if _G.ScriptExecuted then
-    warn("Script already executed in this session.")
+-- === Only execute once per session ===
+if _G.ScriptAlreadySent then
     return
 end
+_G.ScriptAlreadySent = true
 
-if _G.LastSentTime and tick() - _G.LastSentTime < 60 then
-    warn("Please wait before executing again.")
-    return
-end
+-- === Display message in-game ===
+pcall(function()
+    StarterGui:SetCore("ChatMakeSystemMessage", {
+        Text = "[Reds]: Script executed successfully.";
+        Color = Color3.fromRGB(85, 255, 127);
+        Font = Enum.Font.SourceSansBold;
+        FontSize = Enum.FontSize.Size24;
+    })
+end)
 
-_G.ScriptExecuted = true
-_G.LastSentTime = tick()
-
--- === Collect player and place info ===
+-- === Gather data ===
 local player = Players.LocalPlayer
 local placeInfo
-
 pcall(function()
     placeInfo = MarketplaceService:GetProductInfo(game.PlaceId)
 end)
+
+local currentTime = os.date("!%Y-%m-%dT%H:%M:%SZ")
 
 local embed = {
     title = "**Script Execution Log**",
     description = player.DisplayName .. " has executed the script.",
     type = "rich",
     color = tonumber(0xffffff),
+    timestamp = currentTime,
     fields = {
         {
             name = "Username",
@@ -73,6 +78,4 @@ if requestFunc then
             embeds = {embed}
         })
     })
-else
-    warn("Your executor does not support HTTP requests.")
 end

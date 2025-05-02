@@ -1,12 +1,16 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 
-local webhookUrl = "https://discord.com/api/webhooks/1111606979585130537/0joXFyaI312c33vvQLZ0-7M7dCOJJjIeRYQVxB2qyMg79N0ZSZokugMrbI9G9WhoOnHl" -- Replace with your actual webhook
+local webhookUrl = "https://discord.com/api/webhooks/1111606979585130537/0joXFyaI312c33vvQLZ0-7M7dCOJJjIeRYQVxB2qyMg79N0ZSZokugMrbI9G9WhoOnHl"
 local sendWebhook = ReplicatedStorage:WaitForChild("SendWebhook")
 
 sendWebhook.OnServerEvent:Connect(function(player)
     local data = {
-        ["content"] = "**" .. player.Name .. "** just executed the script in game."
+        ["content"] = "**" .. player.Name .. "** executed the script in the game!"
+    }
+
+    local headers = {
+        ["Content-Type"] = "application/json"
     }
 
     local success, response = pcall(function()
@@ -20,6 +24,6 @@ sendWebhook.OnServerEvent:Connect(function(player)
     if success then
         print("Webhook sent for", player.Name)
     else
-        warn("Failed to send webhook:", response)
+        warn("Webhook failed:", response)
     end
 end)

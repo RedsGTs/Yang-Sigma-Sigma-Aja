@@ -1,112 +1,94 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local player = Players.LocalPlayer
 local placeId = game.PlaceId
 
--- Destroy existing GUI
+-- === GUI CLEANUP ===
 if game.CoreGui:FindFirstChild("JobIDHub") then
 	game.CoreGui.JobIDHub:Destroy()
 end
 
--- Helper: Glow effect
-local function addGlowEffect(button, color1, color2)
-	local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
-	local tween = TweenService:Create(button, tweenInfo, { BackgroundColor3 = color2 })
-	tween:Play()
-	button.MouseEnter:Connect(function()
-		tween:Pause()
-		button.BackgroundColor3 = color1
-	end)
-	button.MouseLeave:Connect(function()
-		tween:Play()
-	end)
-end
-
--- UI Setup
+-- === GUI SETUP ===
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "JobIDHub"
 gui.ResetOnSpawn = false
 
-local toggleIcon = Instance.new("TextButton", gui)
+-- Toggle Icon
+local toggleIcon = Instance.new("ImageButton", gui)
+toggleIcon.Size = UDim2.new(0, 40, 0, 40)
+toggleIcon.Position = UDim2.new(0, 10, 0.4, 0)
+toggleIcon.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggleIcon.BackgroundTransparency = 0.2
+toggleIcon.Image = "rbxassetid://6031091002"
 toggleIcon.Name = "ToggleIcon"
-toggleIcon.Size = UDim2.new(0, 50, 0, 50)
-toggleIcon.Position = UDim2.new(0, 10, 0, 10)
-toggleIcon.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-toggleIcon.Text = "Reds"
-toggleIcon.TextColor3 = Color3.new(1, 1, 1)
-toggleIcon.TextSize = 20
-addGlowEffect(toggleIcon, Color3.fromRGB(0, 0, 0), Color3.fromRGB(50, 50, 50))
 toggleIcon.Active = true
 toggleIcon.Draggable = true
 
+-- Main Frame
 local mainFrame = Instance.new("Frame", gui)
 mainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-mainFrame.Size = UDim2.new(0, 320, 0, 270)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-mainFrame.BackgroundTransparency = 0.3
+mainFrame.Size = UDim2.new(0, 320, 0, 260)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+mainFrame.BackgroundTransparency = 0.5
 mainFrame.BorderSizePixel = 0
 mainFrame.Name = "MainFrame"
-mainFrame.Visible = false
 mainFrame.Active = true
 mainFrame.Draggable = true
+mainFrame.Visible = true
 
--- Server Uptime
+-- Server Uptime Label
 local uptimeLabel = Instance.new("TextLabel", mainFrame)
-uptimeLabel.Size = UDim2.new(1, -20, 0, 30)
+uptimeLabel.Size = UDim2.new(0.6, 0, 0, 30)
 uptimeLabel.Position = UDim2.new(0, 10, 0, 5)
 uptimeLabel.BackgroundTransparency = 1
 uptimeLabel.TextColor3 = Color3.new(1, 1, 1)
 uptimeLabel.Font = Enum.Font.SourceSans
 uptimeLabel.TextSize = 14
-uptimeLabel.TextXAlignment = Enum.TextXAlignment.Left
-uptimeLabel.Text = "Server Uptime: N/A"
+uptimeLabel.Text = "Uptime: --:--"
 
--- Server Version
+-- Server Version Label
 local versionLabel = Instance.new("TextLabel", mainFrame)
-versionLabel.Size = UDim2.new(1, -20, 0, 30)
-versionLabel.Position = UDim2.new(0, 10, 0, 35)
+versionLabel.Size = UDim2.new(0.4, -10, 0, 30)
+versionLabel.Position = UDim2.new(0.6, 0, 0, 5)
 versionLabel.BackgroundTransparency = 1
-versionLabel.TextColor3 = Color3.new(1, 1, 1)
+versionLabel.TextColor3 = Color3.fromRGB(180, 255, 180)
 versionLabel.Font = Enum.Font.SourceSans
 versionLabel.TextSize = 14
-versionLabel.TextXAlignment = Enum.TextXAlignment.Left
-versionLabel.Text = "Server Version: N/A"
+versionLabel.TextXAlignment = Enum.TextXAlignment.Right
+versionLabel.Text = "Version: ???"
 
--- Job ID Display
+-- Job ID Label
 local jobIdLabel = Instance.new("TextLabel", mainFrame)
-jobIdLabel.Size = UDim2.new(1, -20, 0, 30)
-jobIdLabel.Position = UDim2.new(0, 10, 0, 65)
+jobIdLabel.Size = UDim2.new(1, -20, 0, 40)
+jobIdLabel.Position = UDim2.new(0, 10, 0, 40)
 jobIdLabel.TextColor3 = Color3.new(1, 1, 1)
 jobIdLabel.BackgroundTransparency = 1
 jobIdLabel.Font = Enum.Font.SourceSansBold
 jobIdLabel.TextSize = 16
 jobIdLabel.Text = "Job ID: " .. (game.JobId ~= "" and game.JobId or "Unavailable")
-jobIdLabel.Name = "JobIdLabel"
 
--- Input box for Job ID
+-- Input box
 local jobIdInput = Instance.new("TextBox", mainFrame)
 jobIdInput.Size = UDim2.new(1, -20, 0, 30)
-jobIdInput.Position = UDim2.new(0, 10, 0, 100)
+jobIdInput.Position = UDim2.new(0, 10, 0, 90)
 jobIdInput.PlaceholderText = "Enter Job ID..."
 jobIdInput.Font = Enum.Font.SourceSans
 jobIdInput.TextSize = 16
 jobIdInput.TextColor3 = Color3.new(1, 1, 1)
 jobIdInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-jobIdInput.Name = "JobIdInput"
 
 -- Teleport Button
 local teleportBtn = Instance.new("TextButton", mainFrame)
 teleportBtn.Size = UDim2.new(1, -20, 0, 30)
-teleportBtn.Position = UDim2.new(0, 10, 0, 135)
+teleportBtn.Position = UDim2.new(0, 10, 0, 130)
 teleportBtn.Text = "Join Server by Job ID"
 teleportBtn.Font = Enum.Font.SourceSansBold
 teleportBtn.TextSize = 16
 teleportBtn.TextColor3 = Color3.new(1, 1, 1)
-teleportBtn.Name = "TeleportBtn"
-addGlowEffect(teleportBtn, Color3.fromRGB(0, 200, 100), Color3.fromRGB(0, 255, 150))
+teleportBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 60)
 
 -- Copy Job ID Button
 local copyBtn = Instance.new("TextButton", mainFrame)
@@ -116,8 +98,7 @@ copyBtn.Text = "Copy My Job ID"
 copyBtn.Font = Enum.Font.SourceSansBold
 copyBtn.TextSize = 16
 copyBtn.TextColor3 = Color3.new(1, 1, 1)
-copyBtn.Name = "CopyBtn"
-addGlowEffect(copyBtn, Color3.fromRGB(140, 80, 200), Color3.fromRGB(180, 120, 240))
+copyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
 
 -- Join Random Server Button
 local randomBtn = Instance.new("TextButton", mainFrame)
@@ -127,25 +108,21 @@ randomBtn.Text = "Join Random Server"
 randomBtn.Font = Enum.Font.SourceSansBold
 randomBtn.TextSize = 16
 randomBtn.TextColor3 = Color3.new(1, 1, 1)
-randomBtn.Name = "RandomBtn"
-addGlowEffect(randomBtn, Color3.fromRGB(255, 140, 0), Color3.fromRGB(255, 180, 60))
+randomBtn.BackgroundColor3 = Color3.fromRGB(100, 80, 60)
 
--- Auto Find Old Server Button
-local oldServerBtn = Instance.new("TextButton", mainFrame)
-oldServerBtn.Size = UDim2.new(1, -20, 0, 30)
-oldServerBtn.Position = UDim2.new(0, 10, 0, 210)
-oldServerBtn.Text = "Auto Find Old Server"
-oldServerBtn.Font = Enum.Font.SourceSansBold
-oldServerBtn.TextSize = 16
-oldServerBtn.TextColor3 = Color3.new(1, 1, 1)
-oldServerBtn.Name = "OldServerBtn"
-addGlowEffect(oldServerBtn, Color3.fromRGB(100, 100, 255), Color3.fromRGB(160, 160, 255))
+-- Join Oldest Server Button
+local oldBtn = Instance.new("TextButton", mainFrame)
+oldBtn.Size = UDim2.new(1, -20, 0, 30)
+oldBtn.Position = UDim2.new(0, 10, 0, 210)
+oldBtn.Text = "Join Oldest Server"
+oldBtn.Font = Enum.Font.SourceSansBold
+oldBtn.TextSize = 16
+oldBtn.TextColor3 = Color3.new(1, 1, 1)
+oldBtn.BackgroundColor3 = Color3.fromRGB(100, 60, 80)
 
--- Button Actions
+-- Actions
 copyBtn.MouseButton1Click:Connect(function()
-	if setclipboard then
-		setclipboard(game.JobId)
-	end
+	if setclipboard then setclipboard(game.JobId) end
 end)
 
 teleportBtn.MouseButton1Click:Connect(function()
@@ -167,51 +144,42 @@ randomBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
-oldServerBtn.MouseButton1Click:Connect(function()
-	local servers = HttpService:JSONDecode(
-		game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100")
-	)
-	local oldest = nil
-	for _, server in pairs(servers.data) do
-		if server.playing < server.maxPlayers and server.id ~= game.JobId then
-			if not oldest or (server.uptime or 0) > (oldest.uptime or 0) then
-				oldest = server
-			end
+oldBtn.MouseButton1Click:Connect(function()
+	local remote = ReplicatedStorage:FindFirstChild("GetOldestServer")
+	if remote and remote:IsA("RemoteFunction") then
+		local oldJobId = remote:InvokeServer()
+		if oldJobId then
+			TeleportService:TeleportToPlaceInstance(placeId, oldJobId, player)
 		end
-	end
-	if oldest then
-		TeleportService:TeleportToPlaceInstance(placeId, oldest.id, player)
 	end
 end)
 
 -- Toggle GUI
+local shown = true
 toggleIcon.MouseButton1Click:Connect(function()
-	mainFrame.Visible = not mainFrame.Visible
+	shown = not shown
+	mainFrame.Visible = shown
 end)
 
--- Shortcut key: Press "M" to toggle
-UIS.InputBegan:Connect(function(input, gp)
-	if not gp and input.KeyCode == Enum.KeyCode.M then
-		mainFrame.Visible = not mainFrame.Visible
+-- Uptime Updater
+task.spawn(function()
+	local startValue = ReplicatedStorage:WaitForChild("ServerStartTime", 5)
+	if startValue then
+		while true do
+			local now = os.time()
+			local seconds = now - startValue.Value
+			local mins = math.floor(seconds / 60)
+			local secs = seconds % 60
+			uptimeLabel.Text = string.format("Uptime: %02d:%02d", mins, secs)
+			task.wait(1)
+		end
 	end
 end)
 
--- Uptime and Version Fetcher
+-- Set Version Label
 task.spawn(function()
-	while true do
-		local success, data = pcall(function()
-			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"))
-		end)
-		if success and data then
-			for _, server in pairs(data.data) do
-				if server.id == game.JobId then
-					local upSeconds = math.floor(server.uptime or 0)
-					uptimeLabel.Text = string.format("Server Uptime: %02d:%02d", math.floor(upSeconds / 60), upSeconds % 60)
-					versionLabel.Text = "Server Version: " .. (server.version or "Unknown")
-					break
-				end
-			end
-		end
-		task.wait(15)
+	local version = ReplicatedStorage:WaitForChild("ServerVersion", 5)
+	if version then
+		versionLabel.Text = "Version: " .. version.Value
 	end
 end)

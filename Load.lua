@@ -1,32 +1,29 @@
-
--- Step 1: Create a RemoteEvent named "RequestVersionInfo" in ReplicatedStorage
--- Use Roblox Studio Explorer to add it under ReplicatedStorage
-
--- Step 2: Server script in ServerScriptService (e.g. VersionServerScript)
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RequestVersionInfo = ReplicatedStorage:WaitForChild("RequestVersionInfo")
-
-local SERVER_VERSION = "1.2.3"  -- Define your server version here
-
-RequestVersionInfo.OnServerEvent:Connect(function(player)
-    -- When client requests version, send it back using FireClient
-    RequestVersionInfo:FireClient(player, SERVER_VERSION)
-end)
-
--- Step 3: Create a ScreenGui with a TextLabel in StarterGui
--- Name the TextLabel "VersionLabel", set initial Text to "Version: Loading..."
-
--- Step 4: LocalScript inside the ScreenGui that will request and show the version info
+-- LocalScript executed via Delta Executor
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RequestVersionInfo = ReplicatedStorage:WaitForChild("RequestVersionInfo")
-local player = game.Players.LocalPlayer
-local versionLabel = script.Parent:WaitForChild("VersionLabel")
+local Players = game:GetService("Players")
 
--- Request server version when the GUI loads
+-- Wait for RemoteEvent and LocalPlayer
+local RequestVersionInfo = ReplicatedStorage:WaitForChild("RequestVersionInfo")
+local player = Players.LocalPlayer
+
+-- Create GUI
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "VersionGui"
+
+local versionLabel = Instance.new("TextLabel", screenGui)
+versionLabel.Name = "VersionLabel"
+versionLabel.Size = UDim2.new(0, 300, 0, 50)
+versionLabel.Position = UDim2.new(0, 10, 0, 10)
+versionLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+versionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+versionLabel.TextScaled = true
+versionLabel.Text = "Version: Loading..."
+
+-- Request version from the server
 RequestVersionInfo:FireServer()
 
--- Listen for server reply with version info
+-- Listen for response from the server
 RequestVersionInfo.OnClientEvent:Connect(function(version)
-    versionLabel.Text = "Version: " .. version
+    versionLabel.Text = "Version: " .. tostring(version)
 end)

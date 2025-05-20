@@ -1,4 +1,3 @@
--- Services
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local TeleportService = game:GetService("TeleportService")
@@ -8,7 +7,32 @@ local UIS = game:GetService("UserInputService")
 
 local placeId = game.PlaceId
 
--- Server Start Time Setup
+-- === CONFIG SYSTEM ===
+local config = {
+    autoHop = false,
+    delay = 30
+}
+
+local function saveConfig()
+    if isfile then
+        writefile("AutoHopConfig.json", HttpService:JSONEncode(config))
+    end
+end
+
+local function loadConfig()
+    if isfile and isfile("AutoHopConfig.json") then
+        local success, data = pcall(function()
+            return HttpService:JSONDecode(readfile("AutoHopConfig.json"))
+        end)
+        if success and data then
+            config = data
+        end
+    end
+end
+
+loadConfig()
+
+-- === SERVER START TIME SETUP ===
 if not ReplicatedStorage:FindFirstChild("ServerStartTime") then
     local serverStartTime = Instance.new("NumberValue")
     serverStartTime.Name = "ServerStartTime"
@@ -16,146 +40,121 @@ if not ReplicatedStorage:FindFirstChild("ServerStartTime") then
     serverStartTime.Parent = ReplicatedStorage
 end
 
--- Cleanup existing GUI
+-- === GUI CLEANUP ===
 if game.CoreGui:FindFirstChild("JobIDHub") then
     game.CoreGui.JobIDHub:Destroy()
 end
 
--- Create GUI
-local gui = Instance.new("ScreenGui")
-guim.Name = "JobIDHub"
+-- === GUI SETUP ===
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "JobIDHub"
 gui.ResetOnSpawn = false
-gui.Parent = game.CoreGui
 
--- Toggle Gear Icon
-local toggleIcon = Instance.new("ImageButton")
-toggleIcon.Size = UDim2.new(0, 50, 0, 50)
+-- Toggle Icon
+local toggleIcon = Instance.new("ImageButton", gui)
+toggleIcon.Size = UDim2.new(0, 40, 0, 40)
 toggleIcon.Position = UDim2.new(0, 10, 0.4, 0)
+toggleIcon.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggleIcon.BackgroundTransparency = 0.2
 toggleIcon.Image = "rbxassetid://6031091002"
-toggleIcon.BackgroundColor3 = Color3.fromRGB(20, 40, 40)
-toggleIcon.ImageColor3 = Color3.new(1, 1, 1)
-toggleIcon.BorderSizePixel = 0
-toggleIcon.AutoButtonColor = false
 toggleIcon.Name = "ToggleIcon"
-toggleIcon.Parent = gui
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(1, 0)
-corner.Parent = toggleIcon
+toggleIcon.Active = true
+toggleIcon.Draggable = true
 
--- Main Frame (Styled like Lego brick UI)
-local mainFrame = Instance.new("Frame")
+-- Main Frame
+local mainFrame = Instance.new("Frame", gui)
 mainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-mainFrame.Size = UDim2.new(0, 340, 0, 260)
-mainFrame.BackgroundColor3 = Color3.fromRGB(105, 60, 30)
+mainFrame.Size = UDim2.new(0, 320, 0, 250)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+mainFrame.BackgroundTransparency = 0.5
 mainFrame.BorderSizePixel = 0
+mainFrame.Name = "MainFrame"
+mainFrame.Active = true
+mainFrame.Draggable = true
 mainFrame.Visible = true
-mainFrame.Parent = gui
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 12)
-mainCorner.Parent = mainFrame
 
--- Title Label
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
-title.Position = UDim2.new(0, 0, 0, 0)
-title.BackgroundColor3 = Color3.fromRGB(150, 80, 40)
-title.Text = "Settings"
-title.Font = Enum.Font.FredokaOne
-title.TextSize = 28
-title.TextColor3 = Color3.new(1, 1, 1)
-title.Parent = mainFrame
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 10)
-titleCorner.Parent = title
-
--- Server Uptime
-local uptimeLabel = Instance.new("TextLabel")
-uptimeLabel.Size = UDim2.new(1, -20, 0, 30)
-uptimeLabel.Position = UDim2.new(0, 10, 0, 50)
+-- Server Uptime Label
+local uptimeLabel = Instance.new("TextLabel", mainFrame)
+uptimeLabel.Size = UDim2.new(0, 120, 0, 30)
+uptimeLabel.Position = UDim2.new(1, -130, 0, 5)
 uptimeLabel.BackgroundTransparency = 1
 uptimeLabel.TextColor3 = Color3.new(1, 1, 1)
-uptimeLabel.Font = Enum.Font.SourceSansBold
-uptimeLabel.TextSize = 16
-uptimeLabel.TextXAlignment = Enum.TextXAlignment.Left
+uptimeLabel.Font = Enum.Font.SourceSans
+uptimeLabel.TextSize = 14
 uptimeLabel.Text = "Server Uptime: --:--"
-uptimeLabel.Parent = mainFrame
+uptimeLabel.TextXAlignment = Enum.TextXAlignment.Right
 
--- Job ID Display
-local jobIdLabel = Instance.new("TextLabel")
-jobIdLabel.Size = UDim2.new(1, -20, 0, 30)
-jobIdLabel.Position = UDim2.new(0, 10, 0, 85)
-jobIdLabel.BackgroundTransparency = 1
+-- Job ID Label
+local jobIdLabel = Instance.new("TextLabel", mainFrame)
+jobIdLabel.Size = UDim2.new(1, -20, 0, 40)
+jobIdLabel.Position = UDim2.new(0, 10, 0, 40)
 jobIdLabel.TextColor3 = Color3.new(1, 1, 1)
+jobIdLabel.BackgroundTransparency = 1
 jobIdLabel.Font = Enum.Font.SourceSansBold
 jobIdLabel.TextSize = 16
 jobIdLabel.Text = "Job ID: " .. (game.JobId ~= "" and game.JobId or "Unavailable")
-jobIdLabel.Parent = mainFrame
 
--- Job ID Input
-local jobIdInput = Instance.new("TextBox")
+-- Input box
+local jobIdInput = Instance.new("TextBox", mainFrame)
 jobIdInput.Size = UDim2.new(1, -20, 0, 30)
-jobIdInput.Position = UDim2.new(0, 10, 0, 120)
+jobIdInput.Position = UDim2.new(0, 10, 0, 90)
 jobIdInput.PlaceholderText = "Enter Job ID..."
 jobIdInput.Font = Enum.Font.SourceSans
 jobIdInput.TextSize = 16
 jobIdInput.TextColor3 = Color3.new(1, 1, 1)
 jobIdInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-jobIdInput.Parent = mainFrame
 
 -- Teleport Button
-local teleportBtn = Instance.new("TextButton")
+local teleportBtn = Instance.new("TextButton", mainFrame)
 teleportBtn.Size = UDim2.new(1, -20, 0, 30)
-teleportBtn.Position = UDim2.new(0, 10, 0, 160)
+teleportBtn.Position = UDim2.new(0, 10, 0, 130)
 teleportBtn.Text = "Join Server by Job ID"
 teleportBtn.Font = Enum.Font.SourceSansBold
 teleportBtn.TextSize = 16
 teleportBtn.TextColor3 = Color3.new(1, 1, 1)
 teleportBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 60)
-teleportBtn.Parent = mainFrame
 
--- Copy Button
-local copyBtn = Instance.new("TextButton")
+-- Copy Job ID Button
+local copyBtn = Instance.new("TextButton", mainFrame)
 copyBtn.Size = UDim2.new(0.5, -15, 0, 30)
-copyBtn.Position = UDim2.new(0, 10, 0, 200)
+copyBtn.Position = UDim2.new(0, 10, 0, 170)
 copyBtn.Text = "Copy My Job ID"
 copyBtn.Font = Enum.Font.SourceSansBold
 copyBtn.TextSize = 16
 copyBtn.TextColor3 = Color3.new(1, 1, 1)
 copyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-copyBtn.Parent = mainFrame
 
--- Random Button
-local randomBtn = Instance.new("TextButton")
+-- Join Random Server Button
+local randomBtn = Instance.new("TextButton", mainFrame)
 randomBtn.Size = UDim2.new(0.5, -15, 0, 30)
-randomBtn.Position = UDim2.new(0.5, 5, 0, 200)
+randomBtn.Position = UDim2.new(0.5, 5, 0, 170)
 randomBtn.Text = "Join Random Server"
 randomBtn.Font = Enum.Font.SourceSansBold
 randomBtn.TextSize = 16
 randomBtn.TextColor3 = Color3.new(1, 1, 1)
 randomBtn.BackgroundColor3 = Color3.fromRGB(100, 80, 60)
-randomBtn.Parent = mainFrame
 
--- Toggle Function
-local shown = true
-toggleIcon.MouseButton1Click:Connect(function()
-    shown = not shown
-    mainFrame.Visible = shown
-end)
+-- Auto Hop Toggle
+local autoHopToggle = Instance.new("TextButton", mainFrame)
+autoHopToggle.Size = UDim2.new(0.5, -15, 0, 30)
+autoHopToggle.Position = UDim2.new(0, 10, 0, 210)
+autoHopToggle.Font = Enum.Font.SourceSansBold
+autoHopToggle.TextSize = 16
+autoHopToggle.TextColor3 = Color3.new(1, 1, 1)
+autoHopToggle.BackgroundColor3 = Color3.fromRGB(100, 60, 60)
+autoHopToggle.Text = "Auto Hop: " .. (config.autoHop and "ON" or "OFF")
 
--- Uptime Updater
-local startValue = ReplicatedStorage:WaitForChild("ServerStartTime")
-task.spawn(function()
-    while true do
-        local now = os.time()
-        local seconds = now - startValue.Value
-        local mins = math.floor(seconds / 60)
-        local secs = seconds % 60
-        uptimeLabel.Text = string.format("Server Uptime: %02d:%02d", mins, secs)
-        task.wait(1)
-    end
-end)
+-- Delay Input
+local delayInput = Instance.new("TextBox", mainFrame)
+delayInput.Size = UDim2.new(0.5, -15, 0, 30)
+delayInput.Position = UDim2.new(0.5, 5, 0, 210)
+delayInput.Font = Enum.Font.SourceSans
+delayInput.TextSize = 16
+delayInput.TextColor3 = Color3.new(1, 1, 1)
+delayInput.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+delayInput.Text = tostring(config.delay)
 
--- Button Actions
+-- === Button Actions ===
 copyBtn.MouseButton1Click:Connect(function()
     if setclipboard then
         setclipboard(game.JobId)
@@ -178,5 +177,59 @@ randomBtn.MouseButton1Click:Connect(function()
             TeleportService:TeleportToPlaceInstance(placeId, server.id, player)
             break
         end
+    end
+end)
+
+autoHopToggle.MouseButton1Click:Connect(function()
+    config.autoHop = not config.autoHop
+    autoHopToggle.Text = "Auto Hop: " .. (config.autoHop and "ON" or "OFF")
+    saveConfig()
+end)
+
+delayInput.FocusLost:Connect(function()
+    local val = tonumber(delayInput.Text)
+    if val and val > 0 then
+        config.delay = val
+        saveConfig()
+    else
+        delayInput.Text = tostring(config.delay)
+    end
+end)
+
+-- Toggle Main Panel
+local shown = true
+toggleIcon.MouseButton1Click:Connect(function()
+    shown = not shown
+    mainFrame.Visible = shown
+end)
+
+-- Server Uptime Updater
+task.spawn(function()
+    local startValue = ReplicatedStorage:WaitForChild("ServerStartTime")
+    while true do
+        local now = os.time()
+        local seconds = now - startValue.Value
+        local mins = math.floor(seconds / 60)
+        local secs = seconds % 60
+        uptimeLabel.Text = string.format("Server Uptime: %02d:%02d", mins, secs)
+        task.wait(1)
+    end
+end)
+
+-- Auto Hop Logic
+task.spawn(function()
+    while true do
+        if config.autoHop then
+            local servers = HttpService:JSONDecode(
+                game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100")
+            )
+            for _, server in pairs(servers.data) do
+                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                    TeleportService:TeleportToPlaceInstance(placeId, server.id, player)
+                    break
+                end
+            end
+        end
+        task.wait(config.delay)
     end
 end)

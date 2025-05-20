@@ -1,25 +1,4 @@
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-if not ReplicatedStorage:FindFirstChild("ServerStartTime") then
-    local serverStartTime = Instance.new("NumberValue")
-    serverStartTime.Name = "ServerStartTime"
-    serverStartTime.Value = os.time()
-    serverStartTime.Parent = ReplicatedStorage
-end
-
-if not ReplicatedStorage:FindFirstChild("ServerVersion") then
-    local version = Instance.new("StringValue")
-    version.Name = "ServerVersion"
-    version.Value = "v1.0.0_" .. tostring(os.time())
-    version.Parent = ReplicatedStorage
-end
-
-
-
-
--- ===== CLIENT LOCAL SCRIPT (Put in StarterPlayerScripts or injected as LocalScript) =====
-
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local TeleportService = game:GetService("TeleportService")

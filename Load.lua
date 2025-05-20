@@ -1,4 +1,3 @@
-
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local TeleportService = game:GetService("TeleportService")
@@ -6,6 +5,7 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UIS = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
 
 local placeId = game.PlaceId
 
@@ -15,32 +15,64 @@ if CoreGui:FindFirstChild("JobIDHub") then
 end
 
 -- === GUI SETUP ===
-local gui = Instance.new("ScreenGui", CoreGui)
+local gui = Instance.new("ScreenGui")
 gui.Name = "JobIDHub"
 gui.ResetOnSpawn = false
+gui.Parent = CoreGui
 
 -- Toggle Icon
-local toggleIcon = Instance.new("ImageButton", gui)
+local toggleIcon = Instance.new("ImageButton")
 toggleIcon.Size = UDim2.new(0, 40, 0, 40)
 toggleIcon.Position = UDim2.new(0, 10, 0.4, 0)
 toggleIcon.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 toggleIcon.BackgroundTransparency = 0.2
 toggleIcon.Image = "rbxassetid://6031091002"
 toggleIcon.Name = "ToggleIcon"
-toggleIcon.Active = true
-toggleIcon.Draggable = true
+toggleIcon.Parent = gui
 
 -- Main Frame
-local mainFrame = Instance.new("Frame", gui)
+local mainFrame = Instance.new("Frame")
 mainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-mainFrame.Size = UDim2.new(0, 320, 0, 270)
+mainFrame.Size = UDim2.new(0, 320, 0, 310)
 mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 mainFrame.BackgroundTransparency = 0.5
 mainFrame.BorderSizePixel = 0
 mainFrame.Name = "MainFrame"
-mainFrame.Active = true
-mainFrame.Draggable = true
-mainFrame.Visible = true
+mainFrame.Parent = gui
+
+-- === Custom Draggable ===
+local dragging = false
+local dragInput, mousePos, framePos
+
+mainFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		mousePos = input.Position
+		framePos = mainFrame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - mousePos
+		mainFrame.Position = UDim2.new(
+			framePos.X.Scale, framePos.X.Offset + delta.X,
+			framePos.Y.Scale, framePos.Y.Offset + delta.Y
+		)
+	end
+end)
 
 -- Server Uptime Label
 local uptimeLabel = Instance.new("TextLabel", mainFrame)
@@ -61,7 +93,7 @@ versionLabel.BackgroundTransparency = 1
 versionLabel.TextColor3 = Color3.new(1, 1, 1)
 versionLabel.Font = Enum.Font.SourceSansBold
 versionLabel.TextSize = 16
-versionLabel.Text = "Server Version: Loading..."
+versionLabel.Text = "Server Version: v1.0"
 
 -- Job ID Label
 local jobIdLabel = Instance.new("TextLabel", mainFrame)
@@ -134,18 +166,15 @@ delayInput.TextColor3 = Color3.new(1, 1, 1)
 delayInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 delayInput.Text = "10"
 
--- Variables
+-- Config values
 local autoHopEnabled = false
 local autoHopDelay = 10
-
--- Save/load config (using saved Roblox settings)
-local HttpService = HttpService
 local configKey = "JobIDHubConfig"
 
 local function saveConfig()
     local config = {
         autoHopEnabled = autoHopEnabled,
-        autoHopDelay = autoHopDelay
+        autoHopDelay = tonumber(delayInput.Text) or 10
     }
     pcall(function()
         writefile(configKey, HttpService:JSONEncode(config))
@@ -168,7 +197,7 @@ end
 
 loadConfig()
 
--- Button connections
+-- === Button Functions ===
 copyBtn.MouseButton1Click:Connect(function()
     if setclipboard then
         setclipboard(game.JobId)
@@ -180,3 +209,37 @@ teleportBtn.MouseButton1Click:Connect(function()
     if inputJob and inputJob ~= "" then
         TeleportService:TeleportToPlaceInstance(placeId, inputJob, player)
     end
+end)
+
+randomBtn.MouseButton1Click:Connect(function()
+    TeleportService:Teleport(placeId)
+end)
+
+autoHopToggle.MouseButton1Click:Connect(function()
+    autoHopEnabled = not autoHopEnabled
+    autoHopToggle.Text = "Auto Hop: " .. (autoHopEnabled and "ON" or "OFF")
+    saveConfig()
+end)
+
+-- === Auto Hop Coroutine ===
+coroutine.wrap(function()
+    while true do
+        wait(1)
+        if autoHopEnabled then
+            local delay = tonumber(delayInput.Text)
+            if delay and delay > 0 then
+                wait(delay)
+                TeleportService:Teleport(placeId)
+            end
+        end
+    end
+end)()
+
+-- === Uptime Tracking ===
+local startTime = tick()
+RunService.RenderStepped:Connect(function()
+    local uptime = tick() - startTime
+    local minutes = math.floor(uptime / 60)
+    local seconds = math.floor(uptime % 60)
+    uptimeLabel.Text = string.format("Server Uptime: %02d:%02d", minutes, seconds)
+end)

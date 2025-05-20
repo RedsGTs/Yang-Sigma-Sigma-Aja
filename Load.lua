@@ -1,5 +1,3 @@
--- ===== SERVER SCRIPT (Put in ServerScriptService) =====
---[[
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -17,7 +15,6 @@ if not ReplicatedStorage:FindFirstChild("ServerVersion") then
     version.Parent = ReplicatedStorage
 end
 
---]]
 
 
 

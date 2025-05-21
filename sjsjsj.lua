@@ -7,18 +7,10 @@ local UIS = game:GetService("UserInputService")
 
 local placeId = game.PlaceId
 
--- === SERVER START TIME SETUP ===
--- Only run once per server, from the first player
-if not ReplicatedStorage:FindFirstChild("ServerStartTime") then
-	local serverStartTime = Instance.new("NumberValue")
-	serverStartTime.Name = "ServerStartTime"
-	serverStartTime.Value = os.time()
-	serverStartTime.Parent = ReplicatedStorage
-end
 
 -- === GUI CLEANUP ===
 if game.CoreGui:FindFirstChild("JobIDHub") then
-	game.CoreGui.JobIDHub:Destroy()
+        game.CoreGui.JobIDHub:Destroy()
 end
 
 -- === GUI SETUP ===
@@ -48,17 +40,6 @@ mainFrame.Name = "MainFrame"
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Visible = true
-
--- Server Uptime Label
-local uptimeLabel = Instance.new("TextLabel", mainFrame)
-uptimeLabel.Size = UDim2.new(0, 120, 0, 30)
-uptimeLabel.Position = UDim2.new(1, -130, 0, 5)
-uptimeLabel.BackgroundTransparency = 1
-uptimeLabel.TextColor3 = Color3.new(1, 1, 1)
-uptimeLabel.Font = Enum.Font.SourceSans
-uptimeLabel.TextSize = 14
-uptimeLabel.Text = "Server Uptime: --:--"
-uptimeLabel.TextXAlignment = Enum.TextXAlignment.Right
 
 -- Job ID Label
 local jobIdLabel = Instance.new("TextLabel", mainFrame)
@@ -112,46 +93,34 @@ randomBtn.BackgroundColor3 = Color3.fromRGB(100, 80, 60)
 
 -- Button Actions
 copyBtn.MouseButton1Click:Connect(function()
-	if setclipboard then
-		setclipboard(game.JobId)
-	end
+        if setclipboard then
+                setclipboard(game.JobId)
+        end
 end)
 
 teleportBtn.MouseButton1Click:Connect(function()
-	local inputJob = jobIdInput.Text
-	if inputJob and inputJob ~= "" then
-		TeleportService:TeleportToPlaceInstance(placeId, inputJob, player)
-	end
+        local inputJob = jobIdInput.Text
+        if inputJob and inputJob ~= "" then
+                TeleportService:TeleportToPlaceInstance(placeId, inputJob, player)
+        end
 end)
 
 randomBtn.MouseButton1Click:Connect(function()
-	local servers = HttpService:JSONDecode(
-		game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100")
-	)
-	for _, server in pairs(servers.data) do
-		if server.playing < server.maxPlayers and server.id ~= game.JobId then
-			TeleportService:TeleportToPlaceInstance(placeId, server.id, player)
-			break
-		end
-	end
+        local servers = HttpService:JSONDecode(
+                game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100")
+        )
+        for _, server in pairs(servers.data) do
+                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                        TeleportService:TeleportToPlaceInstance(placeId, server.id, player)
+                        break
+                end
+        end
 end)
 
 -- Toggle Main Panel
 local shown = true
 toggleIcon.MouseButton1Click:Connect(function()
-	shown = not shown
-	mainFrame.Visible = shown
+        shown = not shown
+        mainFrame.Visible = shown
 end)
 
--- Server Uptime Updater
-task.spawn(function()
-	local startValue = ReplicatedStorage:WaitForChild("ServerStartTime")
-	while true do
-		local now = os.time()
-		local seconds = now - startValue.Value
-		local mins = math.floor(seconds / 60)
-		local secs = seconds % 60
-		uptimeLabel.Text = string.format("Server Uptime: %02d:%02d", mins, secs)
-		task.wait(1)
-	end
-end)

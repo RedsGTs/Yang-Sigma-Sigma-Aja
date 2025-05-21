@@ -42,7 +42,7 @@ spawnButton.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
 spawnButton.TextColor3 = Color3.fromRGB(0, 0, 0)
 spawnButton.Parent = frame
 
--- Status
+-- Status Label
 local status = Instance.new("TextLabel")
 status.Position = UDim2.new(0, 10, 0, 150)
 status.Size = UDim2.new(1, -20, 0, 30)
@@ -53,15 +53,41 @@ status.BackgroundTransparency = 1
 status.TextColor3 = Color3.fromRGB(0, 255, 0)
 status.Parent = frame
 
--- On Spawn Click
+-- Spawn Logic (no server)
 spawnButton.MouseButton1Click:Connect(function()
-    local itemName = inputBox.Text
-    if itemName ~= "" then
-        game.ReplicatedStorage:WaitForChild("SpawnItem"):FireServer(itemName)
-        status.Text = "✔ " .. itemName .. " spawned!"
-        status.TextColor3 = Color3.fromRGB(0, 255, 0)
-    else
-        status.Text = "Please enter an item name."
-        status.TextColor3 = Color3.fromRGB(255, 0, 0)
-    end
+	local itemName = inputBox.Text
+	local backpack = player:WaitForChild("Backpack")
+	local starterPack = game:GetService("StarterPack")
+	local model = starterPack:FindFirstChild(itemName)
+
+	if model and model:IsA("Model") then
+		local tool = Instance.new("Tool")
+		tool.Name = itemName
+		tool.RequiresHandle = false
+
+		local clone = model:Clone()
+		clone.Parent = tool
+
+		local primary = clone.PrimaryPart or clone:FindFirstChildWhichIsA("BasePart")
+		if primary then
+			primary.Name = "Handle"
+			primary.Anchored = false
+			tool.Grip = CFrame.new()
+		end
+
+		for _, part in clone:GetDescendants() do
+			if part:IsA("BasePart") and part ~= primary then
+				local weld = Instance.new("WeldConstraint")
+				weld.Part0 = primary
+				weld.Part1 = part
+				weld.Parent = part
+			end
+		end
+
+		tool.Parent = backpack
+		status.Text = "✔ " .. itemName .. " added to Backpack!"
+	else
+		status.Text = "Item not found: " .. itemName
+		status.TextColor3 = Color3.fromRGB(255, 0, 0)
+	end
 end)

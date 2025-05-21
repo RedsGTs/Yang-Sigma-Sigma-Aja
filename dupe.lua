@@ -1,40 +1,38 @@
--- Fake Dupe Script (For Pranks/Visuals Only)
--- Does NOT duplicate anything – visual effect only
+-- LocalScript in StarterPlayer > StarterPlayerScripts
 
 local player = game.Players.LocalPlayer
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "FakeDupeGui"
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "VisualClonePrankGui"
 
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 300, 0, 150)
-frame.Position = UDim2.new(0.5, -150, 0.5, -75)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.BorderSizePixel = 0
+-- UI Button
+local button = Instance.new("TextButton", gui)
+button.Size = UDim2.new(0, 150, 0, 50)
+button.Position = UDim2.new(0.5, -75, 0.9, -25)
+button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
+button.Text = "Clone Item"
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 24
+button.TextColor3 = Color3.new(1, 1, 1)
 
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0.3, 0)
-title.Text = "Duping Item..."
-title.TextColor3 = Color3.fromRGB(0, 255, 0)
-title.BackgroundTransparency = 1
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 24
+-- Fake item to clone
+local fakeItem = Instance.new("Part")
+fakeItem.Size = Vector3.new(2, 2, 2)
+fakeItem.BrickColor = BrickColor.Random()
+fakeItem.Anchored = true
+fakeItem.CanCollide = false
+fakeItem.Material = Enum.Material.Neon
 
-local status = Instance.new("TextLabel", frame)
-status.Position = UDim2.new(0, 0, 0.4, 0)
-status.Size = UDim2.new(1, 0, 0.6, 0)
-status.Text = "0 items duped"
-status.TextColor3 = Color3.fromRGB(255, 255, 255)
-status.BackgroundTransparency = 1
-status.Font = Enum.Font.SourceSans
-status.TextSize = 20
+-- Workspace folder to keep things clean
+local folder = Instance.new("Folder", workspace)
+folder.Name = "VisualClones"
 
--- Fake counter animation
-local dupes = 0
-spawn(function()
-	while dupes < 9999 do
-		dupes += math.random(1, 5)
-		status.Text = dupes .. " items duped"
-		wait(0.05)
-	end
-	status.Text = "Dupe Complete!"
+-- On button click, clone the visual item
+local cloneCount = 0
+button.MouseButton1Click:Connect(function()
+	local clone = fakeItem:Clone()
+	clone.Parent = folder
+	clone.Position = player.Character and player.Character.HumanoidRootPart.Position + Vector3.new(math.random(-10, 10), 5, math.random(-10, 10)) or Vector3.new(0, 5, 0)
+	clone.BrickColor = BrickColor.Random()
+	clone.Name = "Clone_" .. tostring(cloneCount)
+	cloneCount += 1
 end)

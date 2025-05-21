@@ -1,6 +1,5 @@
 -- Services
 local player = game.Players.LocalPlayer
-local runService = game:GetService("RunService")
 
 -- GUI Setup
 local gui = Instance.new("ScreenGui")
@@ -13,11 +12,10 @@ frame.Size = UDim2.new(0, 200, 0, 100)
 frame.Position = UDim2.new(0, 50, 0, 50)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BackgroundTransparency = 0.3
-frame.Active = true -- make it interactive
-frame.Draggable = true -- enable dragging
+frame.Active = true
+frame.Draggable = true
 frame.Parent = gui
 
--- Rounded corners for frame
 local frameCorner = Instance.new("UICorner")
 frameCorner.CornerRadius = UDim.new(0, 10)
 frameCorner.Parent = frame
@@ -38,18 +36,12 @@ button.TextSize = 20
 button.TextColor3 = Color3.new(1, 1, 1)
 button.Size = UDim2.new(0.8, 0, 0.4, 0)
 button.Position = UDim2.new(0.1, 0, 0.5, 0)
+button.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- soft red
 button.Parent = frame
 
--- Rounded corners for button
 local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 10)
 buttonCorner.Parent = button
-
--- RGB effect for button
-runService.RenderStepped:Connect(function()
-	local t = tick()
-	button.BackgroundColor3 = Color3.fromHSV((t * 0.2) % 1, 1, 1)
-end)
 
 -- Tool duplication logic
 button.MouseButton1Click:Connect(function()
@@ -60,5 +52,6 @@ button.MouseButton1Click:Connect(function()
 	if tool then
 		local clone = tool:Clone()
 		clone.Parent = player.Backpack
+		button.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- turn green
 	end
 end)

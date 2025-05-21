@@ -1,38 +1,40 @@
 -- LocalScript in StarterPlayer > StarterPlayerScripts
 
 local player = game.Players.LocalPlayer
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "VisualClonePrankGui"
+local backpack = player:WaitForChild("Backpack")
 
--- UI Button
-local button = Instance.new("TextButton", gui)
-button.Size = UDim2.new(0, 150, 0, 50)
-button.Position = UDim2.new(0.5, -75, 0.9, -25)
-button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
-button.Text = "Clone Item"
+-- Create GUI
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "FakeToolDupeGui"
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0, 100, 0, 100)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Active = true
+frame.Draggable = true
+
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.new(1, -20, 0, 50)
+button.Position = UDim2.new(0, 10, 0.5, -25)
+button.Text = "Item Duper"
 button.Font = Enum.Font.SourceSansBold
-button.TextSize = 24
+button.TextSize = 20
+button.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
 button.TextColor3 = Color3.new(1, 1, 1)
 
--- Fake item to clone
-local fakeItem = Instance.new("Part")
-fakeItem.Size = Vector3.new(2, 2, 2)
-fakeItem.BrickColor = BrickColor.Random()
-fakeItem.Anchored = true
-fakeItem.CanCollide = false
-fakeItem.Material = Enum.Material.Neon
-
--- Workspace folder to keep things clean
-local folder = Instance.new("Folder", workspace)
-folder.Name = "VisualClones"
-
--- On button click, clone the visual item
-local cloneCount = 0
+-- Clone tool (local visual only)
 button.MouseButton1Click:Connect(function()
-	local clone = fakeItem:Clone()
-	clone.Parent = folder
-	clone.Position = player.Character and player.Character.HumanoidRootPart.Position + Vector3.new(math.random(-10, 10), 5, math.random(-10, 10)) or Vector3.new(0, 5, 0)
-	clone.BrickColor = BrickColor.Random()
-	clone.Name = "Clone_" .. tostring(cloneCount)
-	cloneCount += 1
+	local character = player.Character
+	if character then
+		local tool = character:FindFirstChildOfClass("Tool")
+		if tool then
+			local clone = tool:Clone()
+			clone.Parent = backpack
+			print("Cloned tool:", clone.Name)
+		else
+			print("No tool equipped!")
+		end
+	end
 end)

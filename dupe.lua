@@ -21,7 +21,7 @@ frameCorner.CornerRadius = UDim.new(0, 10)
 frameCorner.Parent = frame
 
 local title = Instance.new("TextLabel")
-title.Text = "Pet Duplicate"
+title.Text = "Pet🐾Duplicate"
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 24
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -52,7 +52,7 @@ button.TextSize = 20
 button.TextColor3 = Color3.new(1, 1, 1)
 button.Size = UDim2.new(0.8, 0, 0.25, 0)
 button.Position = UDim2.new(0.1, 0, 0.65, 0)
-button.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+button.BackgroundColor3 = Color3.fromRGB(196, 40, 28)
 button.Parent = frame
 
 local buttonCorner = Instance.new("UICorner")

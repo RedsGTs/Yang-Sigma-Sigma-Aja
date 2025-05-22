@@ -21,7 +21,7 @@ frameCorner.CornerRadius = UDim.new(0, 10)
 frameCorner.Parent = frame
 
 local title = Instance.new("TextLabel")
-title.Text = "Item Duper"
+title.Text = "Pet Duplicate"
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 24
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -46,7 +46,7 @@ textboxCorner.CornerRadius = UDim.new(0, 6)
 textboxCorner.Parent = textbox
 
 local button = Instance.new("TextButton")
-button.Text = "DUPLICATE"
+button.Text = "Duplicate"
 button.Font = Enum.Font.SourceSans
 button.TextSize = 20
 button.TextColor3 = Color3.new(1, 1, 1)

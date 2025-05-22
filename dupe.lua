@@ -36,7 +36,7 @@ button.TextSize = 20
 button.TextColor3 = Color3.new(1, 1, 1)
 button.Size = UDim2.new(0.8, 0, 0.4, 0)
 button.Position = UDim2.new(0.1, 0, 0.5, 0)
-button.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- soft red
+button.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- soft red
 button.Parent = frame
 
 local buttonCorner = Instance.new("UICorner")

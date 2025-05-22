@@ -52,6 +52,11 @@ button.MouseButton1Click:Connect(function()
 	if tool then
 		local clone = tool:Clone()
 		clone.Parent = player.Backpack
-		button.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- turn green
+
+		-- Flash green
+		button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+		task.delay(0.5, function()
+			button.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- revert to soft red
+		end)
 	end
 end)

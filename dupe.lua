@@ -8,7 +8,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Size = UDim2.new(0, 200, 0, 130)
 frame.Position = UDim2.new(0, 50, 0, 50)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BackgroundTransparency = 0.3
@@ -26,17 +26,33 @@ title.Font = Enum.Font.SourceSansBold
 title.TextSize = 24
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.BackgroundTransparency = 1
-title.Size = UDim2.new(1, 0, 0.4, 0)
+title.Size = UDim2.new(1, 0, 0.3, 0)
 title.Parent = frame
+
+local textbox = Instance.new("TextBox")
+textbox.PlaceholderText = "Amount"
+textbox.Text = ""
+textbox.Font = Enum.Font.SourceSans
+textbox.TextSize = 18
+textbox.TextColor3 = Color3.new(1, 1, 1)
+textbox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+textbox.Size = UDim2.new(0.8, 0, 0.25, 0)
+textbox.Position = UDim2.new(0.1, 0, 0.35, 0)
+textbox.ClearTextOnFocus = false
+textbox.Parent = frame
+
+local textboxCorner = Instance.new("UICorner")
+textboxCorner.CornerRadius = UDim.new(0, 6)
+textboxCorner.Parent = textbox
 
 local button = Instance.new("TextButton")
 button.Text = "DUPLICATE"
 button.Font = Enum.Font.SourceSans
 button.TextSize = 20
 button.TextColor3 = Color3.new(1, 1, 1)
-button.Size = UDim2.new(0.8, 0, 0.4, 0)
-button.Position = UDim2.new(0.1, 0, 0.5, 0)
-button.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- soft red
+button.Size = UDim2.new(0.8, 0, 0.25, 0)
+button.Position = UDim2.new(0.1, 0, 0.65, 0)
+button.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 button.Parent = frame
 
 local buttonCorner = Instance.new("UICorner")
@@ -45,18 +61,23 @@ buttonCorner.Parent = button
 
 -- Tool duplication logic
 button.MouseButton1Click:Connect(function()
+	local amount = tonumber(textbox.Text)
+	if not amount or amount < 1 then return end
+
 	local character = player.Character
 	if not character then return end
 
 	local tool = character:FindFirstChildOfClass("Tool")
 	if tool then
-		local clone = tool:Clone()
-		clone.Parent = player.Backpack
+		for i = 1, amount do
+			local clone = tool:Clone()
+			clone.Parent = player.Backpack
+		end
 
 		-- Flash green
 		button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
 		task.delay(0.5, function()
-			button.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- revert to soft red
+			button.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 		end)
 	end
 end)

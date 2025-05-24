@@ -1,129 +1,89 @@
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterGui = game:GetService("StarterGui")
-local player = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
--- GUI Setup
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "ChatGui"
-gui.ResetOnSpawn = false
+-- Create ScreenGui
+local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+gui.Name = "MessageGui"
 
--- Frame Utama
+-- Create Frame
 local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 300, 0, 370)
 frame.Position = UDim2.new(0.3, 0, 0.3, 0)
-frame.Size = UDim2.new(0, 300, 0, 300)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 frame.BackgroundTransparency = 0.3
-frame.BorderSizePixel = 0
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.Active = true
+frame.Draggable = true
 
-local corner = Instance.new("UICorner", frame)
-corner.CornerRadius = UDim.new(0, 12)
+-- Rounded corners
+local uicorner = Instance.new("UICorner", frame)
+uicorner.CornerRadius = UDim.new(0, 12)
 
--- Drag handler (manual)
-local UIS = game:GetService("UserInputService")
-local dragging, dragStart, startPos
+-- Send Message Button
+local sendButton = Instance.new("TextButton", frame)
+sendButton.Size = UDim2.new(0, 120, 0, 30)
+sendButton.Position = UDim2.new(0, 10, 0, 10)
+sendButton.Text = "Send Message"
+sendButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
 
-frame.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = frame.Position
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
+-- Empty Button
+local emptyButton = Instance.new("TextButton", frame)
+emptyButton.Size = UDim2.new(0, 120, 0, 30)
+emptyButton.Position = UDim2.new(0, 150, 0, 10)
+emptyButton.Text = "Do Nothing"
+emptyButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+
+-- Player List ScrollingFrame
+local scroll = Instance.new("ScrollingFrame", frame)
+scroll.Size = UDim2.new(0, 280, 0, 310)
+scroll.Position = UDim2.new(0, 10, 0, 50)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 6
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0, 5)
+
+-- Function to refresh player list
+local function updateList()
+	scroll:ClearAllChildren()
+	layout.Parent = scroll
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		local nameButton = Instance.new("TextButton")
+		nameButton.Size = UDim2.new(1, -10, 0, 30)
+		nameButton.Text = player.Name
+		nameButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+		nameButton.TextColor3 = Color3.new(1, 1, 1)
+		nameButton.BackgroundTransparency = 0.3
+		nameButton.Parent = scroll
+
+		local corner = Instance.new("UICorner", nameButton)
+		corner.CornerRadius = UDim.new(0, 8)
+
+		nameButton.MouseButton1Click:Connect(function()
+			for _, btn in ipairs(scroll:GetChildren()) do
+				if btn:IsA("TextButton") then
+					btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+				end
 			end
+			nameButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 		end)
 	end
-end)
 
-frame.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-		local delta = input.Position - dragStart
-		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
-
--- Tombol Chat
-local chatButton = Instance.new("TextButton", frame)
-chatButton.Size = UDim2.new(1, -20, 0, 40)
-chatButton.Position = UDim2.new(0, 10, 0, 10)
-chatButton.Text = "Kirim Chat: purplelzys"
-chatButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-chatButton.TextColor3 = Color3.new(1,1,1)
-
-Instance.new("UICorner", chatButton).CornerRadius = UDim.new(0, 8)
-
-chatButton.MouseButton1Click:Connect(function()
-	local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-	if chatEvent and chatEvent:FindFirstChild("SayMessageRequest") then
-		chatEvent.SayMessageRequest:FireServer("purplelzys")
-	else
-		StarterGui:SetCore("ChatMakeSystemMessage", {
-			Text = "purplelzys (simulasi)",
-			Color = Color3.fromRGB(200, 100, 255),
-			Font = Enum.Font.SourceSansBold,
-			FontSize = Enum.FontSize.Size24
-		})
-	end
-end)
-
--- Tombol Gimmick
-local gimmickButton = Instance.new("TextButton", frame)
-gimmickButton.Size = UDim2.new(1, -20, 0, 40)
-gimmickButton.Position = UDim2.new(0, 10, 0, 60)
-gimmickButton.Text = "Bypass Loading"
-gimmickButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-gimmickButton.TextColor3 = Color3.new(1,1,1)
-
-Instance.new("UICorner", gimmickButton).CornerRadius = UDim.new(0, 8)
-
--- Scroll daftar pemain
-local scrolling = Instance.new("ScrollingFrame", frame)
-scrolling.Size = UDim2.new(1, -20, 1, -120)
-scrolling.Position = UDim2.new(0, 10, 0, 110)
-scrolling.BackgroundTransparency = 0.4
-scrolling.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-scrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
-scrolling.ScrollBarThickness = 6
-
-Instance.new("UICorner", scrolling).CornerRadius = UDim.new(0, 8)
-
-local layout = Instance.new("UIListLayout", scrolling)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-
--- Highlight dan tombol pemain
-local selectedButton = nil
-local defaultColor = Color3.fromRGB(70, 70, 70)
-local selectedColor = Color3.fromRGB(120, 0, 255)
-
-local function addPlayerButton(p)
-	local btn = Instance.new("TextButton", scrolling)
-	btn.Size = UDim2.new(1, 0, 0, 30)
-	btn.Text = p.Name
-	btn.BackgroundColor3 = defaultColor
-	btn.TextColor3 = Color3.new(1,1,1)
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-
-	btn.MouseButton1Click:Connect(function()
-		if selectedButton then
-			selectedButton.BackgroundColor3 = defaultColor
-		end
-		selectedButton = btn
-		btn.BackgroundColor3 = selectedColor
-
-		StarterGui:SetCore("ChatMakeSystemMessage", {
-			Text = "Kamu memilih: " .. p.Name,
-			Color = Color3.fromRGB(255, 255, 100),
-			Font = Enum.Font.SourceSansBold,
-			FontSize = Enum.FontSize.Size24
-		})
-	end)
+	wait(0.1)
+	scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
 end
 
--- Tambahkan semua pemain
-for _, p in ipairs(Players:GetPlayers()) do
-	addPlayerButton(p)
-end
+-- Initial list
+updateList()
 
--- Tambah jika ada pemain masuk
-Players.PlayerAdded:Connect(addPlayerButton)
+-- Update player list when players join or leave
+Players.PlayerAdded:Connect(updateList)
+Players.PlayerRemoving:Connect(updateList)
+
+-- Send fixed message when button is clicked
+sendButton.MouseButton1Click:Connect(function()
+	local fixedMessage = "Hello everyone!"
+	game.ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
+		:WaitForChild("SayMessageRequest"):FireServer(fixedMessage, "All")
+end)

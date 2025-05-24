@@ -1,14 +1,12 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- GUI Setup
 local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-gui.Name = "GardenChatUI"
+gui.Name = "BubbleChatGUI"
 gui.ResetOnSpawn = false
 
--- Frame
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 250, 0, 400)
+frame.Size = UDim2.new(0, 200, 0, 100)
 frame.Position = UDim2.new(0.05, 0, 0.2, 0)
 frame.BackgroundColor3 = Color3.new(0, 0, 0)
 frame.BackgroundTransparency = 0.4
@@ -16,80 +14,22 @@ frame.Active = true
 frame.Draggable = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 
--- Button 1 (Send Public Chat)
-local button1 = Instance.new("TextButton", frame)
-button1.Size = UDim2.new(0, 100, 0, 30)
-button1.Position = UDim2.new(0, 10, 0, 10)
-button1.Text = "1"
-button1.Font = Enum.Font.SourceSansBold
-button1.TextSize = 20
-button1.TextColor3 = Color3.new(1, 1, 1)
-button1.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-Instance.new("UICorner", button1)
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.new(0, 180, 0, 50)
+button.Position = UDim2.new(0, 10, 0, 25)
+button.Text = "Send Bubble Chat"
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 20
+button.TextColor3 = Color3.new(1, 1, 1)
+button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+Instance.new("UICorner", button)
 
--- Button 2 (does nothing)
-local button2 = Instance.new("TextButton", frame)
-button2.Size = UDim2.new(0, 100, 0, 30)
-button2.Position = UDim2.new(0, 130, 0, 10)
-button2.Text = "2"
-button2.Font = Enum.Font.SourceSansBold
-button2.TextSize = 20
-button2.TextColor3 = Color3.new(1, 1, 1)
-button2.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-Instance.new("UICorner", button2)
-
--- Scrollable player list
-local scroll = Instance.new("ScrollingFrame", frame)
-scroll.Size = UDim2.new(1, -20, 0, 340)
-scroll.Position = UDim2.new(0, 10, 0, 50)
-scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-scroll.ScrollBarThickness = 6
-scroll.BackgroundTransparency = 1
-
-local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0, 5)
-
--- Refresh player list
-local function updateList()
-	scroll:ClearAllChildren()
-	layout.Parent = scroll
-
-	for _, player in ipairs(Players:GetPlayers()) do
-		local nameBtn = Instance.new("TextButton", scroll)
-		nameBtn.Size = UDim2.new(1, -5, 0, 30)
-		nameBtn.Text = player.Name
-		nameBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-		nameBtn.TextColor3 = Color3.new(1, 1, 1)
-		nameBtn.Font = Enum.Font.SourceSans
-		nameBtn.TextSize = 18
-		nameBtn.BackgroundTransparency = 0.2
-		Instance.new("UICorner", nameBtn)
-
-		nameBtn.MouseButton1Click:Connect(function()
-			for _, btn in ipairs(scroll:GetChildren()) do
-				if btn:IsA("TextButton") then
-					btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-				end
-			end
-			nameBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-		end)
-	end
-
-	wait(0.1)
-	scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
-end
-
-Players.PlayerAdded:Connect(updateList)
-Players.PlayerRemoving:Connect(updateList)
-updateList()
-
--- Button 1 sends public chat message
-button1.MouseButton1Click:Connect(function()
-	local msg = "Hello from " .. LocalPlayer.Name .. "!"
-	local success, err = pcall(function()
-		game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
-	end)
-	if not success then
-		warn("Chat send failed: " .. tostring(err))
-	end
+button.MouseButton1Click:Connect(function()
+    local message = "Hello from " .. LocalPlayer.Name .. "!"
+    local success, err = pcall(function()
+        game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+    end)
+    if not success then
+        warn("Chat send failed: ".. tostring(err))
+    end
 end)

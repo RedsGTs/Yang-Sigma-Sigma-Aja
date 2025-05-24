@@ -1,35 +1,91 @@
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local player = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-gui.Name = "BubbleChatGUI"
-gui.ResetOnSpawn = false
+-- GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SimpleGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 200, 0, 100)
-frame.Position = UDim2.new(0.05, 0, 0.2, 0)
-frame.BackgroundColor3 = Color3.new(0, 0, 0)
-frame.BackgroundTransparency = 0.4
-frame.Active = true
-frame.Draggable = true
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+local frame = Instance.new("Frame")
+frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+frame.Size = UDim2.new(0, 300, 0, 300)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
 
-local button = Instance.new("TextButton", frame)
-button.Size = UDim2.new(0, 180, 0, 50)
-button.Position = UDim2.new(0, 10, 0, 25)
-button.Text = "Send Bubble Chat"
-button.Font = Enum.Font.SourceSansBold
-button.TextSize = 20
-button.TextColor3 = Color3.new(1, 1, 1)
-button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-Instance.new("UICorner", button)
+-- Kirim Pesan Button
+local buttonChat = Instance.new("TextButton")
+buttonChat.Size = UDim2.new(1, -20, 0, 40)
+buttonChat.Position = UDim2.new(0, 10, 0, 10)
+buttonChat.Text = "Kirim Pesan"
+buttonChat.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+buttonChat.TextColor3 = Color3.new(1, 1, 1)
+buttonChat.Parent = frame
 
-button.MouseButton1Click:Connect(function()
-    local message = "Hello from " .. LocalPlayer.Name .. "!"
-    local success, err = pcall(function()
-        game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
-    end)
-    if not success then
-        warn("Chat send failed: ".. tostring(err))
-    end
+-- Gimmick Button
+local buttonGimmick = Instance.new("TextButton")
+buttonGimmick.Size = UDim2.new(1, -20, 0, 40)
+buttonGimmick.Position = UDim2.new(0, 10, 0, 60)
+buttonGimmick.Text = "Tombol Gimmick"
+buttonGimmick.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+buttonGimmick.TextColor3 = Color3.new(1, 1, 1)
+buttonGimmick.Parent = frame
+
+-- Player Scrolling List
+local scrollingFrame = Instance.new("ScrollingFrame")
+scrollingFrame.Size = UDim2.new(1, -20, 1, -120)
+scrollingFrame.Position = UDim2.new(0, 10, 0, 110)
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollingFrame.ScrollBarThickness = 6
+scrollingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+scrollingFrame.Parent = frame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = scrollingFrame
+
+-- Selected player tracking
+local selectedButton = nil
+local defaultColor = Color3.fromRGB(70, 70, 70)
+local selectedColor = Color3.fromRGB(120, 0, 255)
+local selectedPlayer = nil
+
+local function createPlayerButton(p)
+	local playerButton = Instance.new("TextButton")
+	playerButton.Size = UDim2.new(1, 0, 0, 30)
+	playerButton.Text = p.Name
+	playerButton.BackgroundColor3 = defaultColor
+	playerButton.TextColor3 = Color3.new(1, 1, 1)
+
+	playerButton.MouseButton1Click:Connect(function()
+		if selectedButton then
+			selectedButton.BackgroundColor3 = defaultColor
+		end
+		selectedButton = playerButton
+		selectedPlayer = p
+		playerButton.BackgroundColor3 = selectedColor
+	end)
+
+	playerButton.Parent = scrollingFrame
+end
+
+-- Populate initial players
+for _, p in ipairs(Players:GetPlayers()) do
+	createPlayerButton(p)
+end
+
+Players.PlayerAdded:Connect(createPlayerButton)
+
+-- Handle "Kirim Pesan" button click
+buttonChat.MouseButton1Click:Connect(function()
+	if selectedPlayer then
+		local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+		if chatEvent and chatEvent:FindFirstChild("SayMessageRequest") then
+			chatEvent.SayMessageRequest:FireServer("Hai " .. selectedPlayer.Name .. "!", "All")
+		else
+			warn("Chat system not found in ReplicatedStorage. Maybe the game uses a custom chat.")
+		end
+	end
 end)

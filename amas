@@ -1,19 +1,27 @@
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
 
 -- GUI Setup
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.Name = "SimpleGui"
+screenGui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", screenGui)
 frame.Position = UDim2.new(0.3, 0, 0.3, 0)
 frame.Size = UDim2.new(0, 300, 0, 300)
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BackgroundTransparency = 0.5
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
 
--- Tombol Kirim Pesan "purplelzys"
+-- Membuat sudut membulat
+local frameCorner = Instance.new("UICorner", frame)
+frameCorner.CornerRadius = UDim.new(0, 12)
+
+-- Tombol 1: Kirim Pesan ke Chat
 local buttonChat = Instance.new("TextButton", frame)
 buttonChat.Size = UDim2.new(1, -20, 0, 40)
 buttonChat.Position = UDim2.new(0, 10, 0, 10)
@@ -21,7 +29,11 @@ buttonChat.Text = "Kirim Pesan"
 buttonChat.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 buttonChat.TextColor3 = Color3.new(1, 1, 1)
 
+local btnCorner1 = Instance.new("UICorner", buttonChat)
+btnCorner1.CornerRadius = UDim.new(0, 8)
+
 buttonChat.MouseButton1Click:Connect(function()
+	-- Kirim pesan ke chat publik
 	ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("purplelzys", "All")
 end)
 
@@ -33,18 +45,25 @@ buttonGimmick.Text = "Tombol Gimmick"
 buttonGimmick.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 buttonGimmick.TextColor3 = Color3.new(1, 1, 1)
 
+local btnCorner2 = Instance.new("UICorner", buttonGimmick)
+btnCorner2.CornerRadius = UDim.new(0, 8)
+
 -- Scroll daftar pemain
 local scrollingFrame = Instance.new("ScrollingFrame", frame)
 scrollingFrame.Size = UDim2.new(1, -20, 1, -120)
 scrollingFrame.Position = UDim2.new(0, 10, 0, 110)
 scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollingFrame.ScrollBarThickness = 6
-scrollingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+scrollingFrame.BackgroundTransparency = 0.3
+scrollingFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+
+local scrollingCorner = Instance.new("UICorner", scrollingFrame)
+scrollingCorner.CornerRadius = UDim.new(0, 8)
 
 local UIListLayout = Instance.new("UIListLayout", scrollingFrame)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Tombol pemain dengan highlight
+-- Fungsi highlight tombol player
 local selectedButton = nil
 local defaultColor = Color3.fromRGB(70, 70, 70)
 local selectedColor = Color3.fromRGB(120, 0, 255)
@@ -55,9 +74,12 @@ local function createPlayerButton(p)
 	playerButton.Text = p.Name
 	playerButton.BackgroundColor3 = defaultColor
 	playerButton.TextColor3 = Color3.new(1, 1, 1)
+	playerButton.Parent = scrollingFrame
+
+	local corner = Instance.new("UICorner", playerButton)
+	corner.CornerRadius = UDim.new(0, 6)
 
 	playerButton.MouseButton1Click:Connect(function()
-		-- Reset warna tombol sebelumnya
 		if selectedButton then
 			selectedButton.BackgroundColor3 = defaultColor
 		end
@@ -71,16 +93,14 @@ local function createPlayerButton(p)
 			FontSize = Enum.FontSize.Size24
 		})
 	end)
-
-	playerButton.Parent = scrollingFrame
 end
 
--- Tambahkan pemain yang ada
+-- Tambahkan semua pemain
 for _, p in ipairs(Players:GetPlayers()) do
 	createPlayerButton(p)
 end
 
--- Tambahkan pemain baru
+-- Tambah pemain baru saat masuk
 Players.PlayerAdded:Connect(function(p)
 	createPlayerButton(p)
 end)

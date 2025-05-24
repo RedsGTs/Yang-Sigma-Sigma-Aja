@@ -1,0 +1,76 @@
+-- Simple GUI Script
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+
+-- GUI Setup
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "SimpleGui"
+
+local frame = Instance.new("Frame", screenGui)
+frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+frame.Size = UDim2.new(0, 300, 0, 300)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BorderSizePixel = 0
+
+-- Tombol 1: Kirim Pesan
+local buttonChat = Instance.new("TextButton", frame)
+buttonChat.Size = UDim2.new(1, -20, 0, 40)
+buttonChat.Position = UDim2.new(0, 10, 0, 10)
+buttonChat.Text = "Kirim Pesan ke Chat"
+buttonChat.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+buttonChat.TextColor3 = Color3.new(1, 1, 1)
+
+buttonChat.MouseButton1Click:Connect(function()
+	-- Ganti "Halo semua!" sesuai kebutuhan
+	game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Halo semua!", "All")
+end)
+
+-- Tombol 2: Gimmick
+local buttonGimmick = Instance.new("TextButton", frame)
+buttonGimmick.Size = UDim2.new(1, -20, 0, 40)
+buttonGimmick.Position = UDim2.new(0, 10, 0, 60)
+buttonGimmick.Text = "Tombol Gimmick (Tidak Berfungsi)"
+buttonGimmick.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+buttonGimmick.TextColor3 = Color3.new(1, 1, 1)
+
+-- Menu Daftar Pemain
+local scrollingFrame = Instance.new("ScrollingFrame", frame)
+scrollingFrame.Size = UDim2.new(1, -20, 1, -120)
+scrollingFrame.Position = UDim2.new(0, 10, 0, 110)
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollingFrame.ScrollBarThickness = 6
+scrollingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+local UIListLayout = Instance.new("UIListLayout", scrollingFrame)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Fungsi untuk membuat tombol pemain
+local function createPlayerButton(p)
+	local playerButton = Instance.new("TextButton")
+	playerButton.Size = UDim2.new(1, 0, 0, 30)
+	playerButton.Text = p.Name
+	playerButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+	playerButton.TextColor3 = Color3.new(1, 1, 1)
+
+	playerButton.MouseButton1Click:Connect(function()
+		StarterGui:SetCore("ChatMakeSystemMessage", {
+			Text = "Kamu mengklik pemain: " .. p.Name,
+			Color = Color3.fromRGB(255, 255, 0),
+			Font = Enum.Font.SourceSansBold,
+			FontSize = Enum.FontSize.Size24
+		})
+	end)
+
+	playerButton.Parent = scrollingFrame
+end
+
+-- Tambahkan semua pemain
+for _, p in pairs(Players:GetPlayers()) do
+	createPlayerButton(p)
+end
+
+-- Saat pemain baru bergabung
+Players.PlayerAdded:Connect(function(p)
+	createPlayerButton(p)
+end)

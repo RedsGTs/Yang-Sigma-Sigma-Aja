@@ -83,7 +83,7 @@ Players.PlayerRemoving:Connect(updateList)
 
 -- Send fixed message when button is clicked
 sendButton.MouseButton1Click:Connect(function()
-	local fixedMessage = "Hello everyone!"
+	local fixedMessage = "@purplelzys"
 	game.ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
 		:WaitForChild("SayMessageRequest"):FireServer(fixedMessage, "All")
 end)

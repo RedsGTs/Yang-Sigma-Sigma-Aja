@@ -1,91 +1,123 @@
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Script Auto-Chat Roblox (Simulasi Manual)
+-- Gunakan dengan bijak dan tanggung jawab
 
--- GUI Setup
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "SimpleGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+local Player = game:GetService("Players").LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local TextService = game:GetService("TextService")
+local RunService = game:GetService("RunService")
 
-local frame = Instance.new("Frame")
-frame.Position = UDim2.new(0.3, 0, 0.3, 0)
-frame.Size = UDim2.new(0, 300, 0, 300)
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-frame.BorderSizePixel = 0
-frame.Parent = screenGui
+-- Konfigurasi
+local MESSAGE = "Ini adalah pesan otomatis"  -- Ganti dengan pesan yang ingin dikirim
+local DELAY_BETWEEN_MESSAGES = 5  -- Delay antar pesan dalam detik
+local MAX_MESSAGES = 10  -- Jumlah maksimal pesan yang dikirim (0 untuk unlimited)
 
--- Kirim Pesan Button
-local buttonChat = Instance.new("TextButton")
-buttonChat.Size = UDim2.new(1, -20, 0, 40)
-buttonChat.Position = UDim2.new(0, 10, 0, 10)
-buttonChat.Text = "Kirim Pesan"
-buttonChat.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-buttonChat.TextColor3 = Color3.new(1, 1, 1)
-buttonChat.Parent = frame
+-- Variabel internal
+local messageCount = 0
+local isRunning = false
 
--- Gimmick Button
-local buttonGimmick = Instance.new("TextButton")
-buttonGimmick.Size = UDim2.new(1, -20, 0, 40)
-buttonGimmick.Position = UDim2.new(0, 10, 0, 60)
-buttonGimmick.Text = "Tombol Gimmick"
-buttonGimmick.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-buttonGimmick.TextColor3 = Color3.new(1, 1, 1)
-buttonGimmick.Parent = frame
-
--- Player Scrolling List
-local scrollingFrame = Instance.new("ScrollingFrame")
-scrollingFrame.Size = UDim2.new(1, -20, 1, -120)
-scrollingFrame.Position = UDim2.new(0, 10, 0, 110)
-scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-scrollingFrame.ScrollBarThickness = 6
-scrollingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-scrollingFrame.Parent = frame
-
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Parent = scrollingFrame
-
--- Selected player tracking
-local selectedButton = nil
-local defaultColor = Color3.fromRGB(70, 70, 70)
-local selectedColor = Color3.fromRGB(120, 0, 255)
-local selectedPlayer = nil
-
-local function createPlayerButton(p)
-	local playerButton = Instance.new("TextButton")
-	playerButton.Size = UDim2.new(1, 0, 0, 30)
-	playerButton.Text = p.Name
-	playerButton.BackgroundColor3 = defaultColor
-	playerButton.TextColor3 = Color3.new(1, 1, 1)
-
-	playerButton.MouseButton1Click:Connect(function()
-		if selectedButton then
-			selectedButton.BackgroundColor3 = defaultColor
-		end
-		selectedButton = playerButton
-		selectedPlayer = p
-		playerButton.BackgroundColor3 = selectedColor
-	end)
-
-	playerButton.Parent = scrollingFrame
+-- Fungsi untuk simulasi input keyboard
+local function simulateKeyPress(keyCode, isKeyDown)
+    local input = Instance.new("InputObject")
+    input.UserInputType = Enum.UserInputType.Keyboard
+    input.KeyCode = keyCode
+    input.Position = Vector3.new(0, 0, 0)
+    
+    if isKeyDown then
+        input.UserInputState = Enum.UserInputState.Begin
+    else
+        input.UserInputState = Enum.UserInputState.End
+    end
+    
+    UserInputService:ProcessInput(input)
 end
 
--- Populate initial players
-for _, p in ipairs(Players:GetPlayers()) do
-	createPlayerButton(p)
+-- Fungsi untuk mengirim pesan
+local function sendChatMessage()
+    -- Simulasi tekan tombol "/" untuk membuka chat
+    simulateKeyPress(Enum.KeyCode.Slash, true)
+    simulateKeyPress(Enum.KeyCode.Slash, false)
+    
+    -- Tunggu frame berikutnya untuk memastikan chat terbuka
+    wait(0.1)
+    
+    -- Ketik pesan karakter per karakter (simulasi mengetik manual)
+    for i = 1, #MESSAGE do
+        local char = string.sub(MESSAGE, i, i)
+        local keyCode
+        
+        -- Konversi karakter sederhana ke KeyCode (tidak mencakup semua karakter)
+        if char == " " then
+            keyCode = Enum.KeyCode.Space
+        else
+            keyCode = Enum.KeyCode[string.upper(char)] or Enum.KeyCode.Unknown
+        end
+        
+        if keyCode ~= Enum.KeyCode.Unknown then
+            simulateKeyPress(keyCode, true)
+            simulateKeyPress(keyCode, false)
+            wait(0.05)  -- Delay antar karakter untuk terlihat lebih alami
+        end
+    end
+    
+    -- Simulasi tekan Enter untuk mengirim pesan
+    simulateKeyPress(Enum.KeyCode.Return, true)
+    simulateKeyPress(Enum.KeyCode.Return, false)
+    
+    messageCount = messageCount + 1
+    print("Pesan terkirim: " .. MESSAGE .. " (" .. messageCount .. "/" .. (MAX_MESSAGES > 0 and MAX_MESSAGES or "∞") .. ")")
 end
 
-Players.PlayerAdded:Connect(createPlayerButton)
+-- Fungsi utama
+local function startAutoChat()
+    if isRunning then return end
+    isRunning = true
+    
+    while isRunning and (MAX_MESSAGES == 0 or messageCount < MAX_MESSAGES) do
+        local success, err = pcall(sendChatMessage)
+        if not success then
+            warn("Error mengirim pesan: " .. err)
+        end
+        
+        wait(DELAY_BETWEEN_MESSAGES)
+    end
+    
+    isRunning = false
+    print("Auto-Chat selesai atau dihentikan")
+end
 
--- Handle "Kirim Pesan" button click
-buttonChat.MouseButton1Click:Connect(function()
-	if selectedPlayer then
-		local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-		if chatEvent and chatEvent:FindFirstChild("SayMessageRequest") then
-			chatEvent.SayMessageRequest:FireServer("Hai " .. selectedPlayer.Name .. "!", "All")
-		else
-			warn("Chat system not found in ReplicatedStorage. Maybe the game uses a custom chat.")
-		end
-	end
-end)
+-- Fungsi untuk menghentikan auto-chat
+local function stopAutoChat()
+    isRunning = false
+    print("Auto-Chat dihentikan")
+end
+
+-- Contoh penggunaan:
+-- startAutoChat()  -- Untuk memulai
+-- stopAutoChat()   -- Untuk menghentikan
+
+-- UI sederhana untuk kontrol (opsional)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game:GetService("CoreGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 120)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -60)
+Frame.BackgroundTransparency = 0.5
+Frame.BackgroundColor3 = Color3.new(0, 0, 0)
+Frame.Parent = ScreenGui
+
+local StartButton = Instance.new("TextButton")
+StartButton.Size = UDim2.new(0.8, 0, 0.3, 0)
+StartButton.Position = UDim2.new(0.1, 0, 0.1, 0)
+StartButton.Text = "Start Auto-Chat"
+StartButton.Parent = Frame
+StartButton.MouseButton1Click:Connect(startAutoChat)
+
+local StopButton = Instance.new("TextButton")
+StopButton.Size = UDim2.new(0.8, 0, 0.3, 0)
+StopButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+StopButton.Text = "Stop Auto-Chat"
+StopButton.Parent = Frame
+StopButton.MouseButton1Click:Connect(stopAutoChat)
+
+print("Auto-Chat GUI telah dimuat. Gunakan dengan bijak!")

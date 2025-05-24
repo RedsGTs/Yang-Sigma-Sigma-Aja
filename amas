@@ -28,19 +28,161 @@ buttonChat.Position = UDim2.new(0, 10, 0, 10)
 buttonChat.Text = "Kirim Pesan"
 buttonChat.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 buttonChat.TextColor3 = Color3.new(1, 1, 1)
+buttonChat.Font = Enum.Font.GothamSemibold
+buttonChat.TextSize = 14
 
 local btnCorner1 = Instance.new("UICorner", buttonChat)
 btnCorner1.CornerRadius = UDim.new(0, 8)
 
+-- Tombol Gimmick
+local buttonGimmick = Instance.new("TextButton", frame)
+buttonGimmick.Size = UDim2.new(1, -20, 0, 40)
+buttonGimmick.Position = UDim2.new(0, 10, 0, 60)
+buttonGimmick.Text = "Tombol Gimmick"
+buttonGimmick.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+buttonGimmick.TextColor3 = Color3.new(1, 1, 1)
+buttonGimmick.Font = Enum.Font.GothamSemibold
+buttonGimmick.TextSize = 14
+
+local btnCorner2 = Instance.new("UICorner", buttonGimmick)
+btnCorner2.CornerRadius = UDim.new(0, 8)
+
+-- Scroll daftar pemain
+local scrollingFrame = Instance.new("ScrollingFrame", frame)
+scrollingFrame.Size = UDim2.new(1, -20, 1, -120)
+scrollingFrame.Position = UDim2.new(0, 10, 0, 110)
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollingFrame.ScrollBarThickness = 6
+scrollingFrame.BackgroundTransparency = 0.3
+scrollingFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+
+local scrollingCorner = Instance.new("UICorner", scrollingFrame)
+scrollingCorner.CornerRadius = UDim.new(0, 8)
+
+local UIListLayout = Instance.new("UIListLayout", scrollingFrame)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+
+-- Fungsi update ukuran scroll
+local function updateScrollSize()
+    local totalHeight = 0
+    for _, child in ipairs(scrollingFrame:GetChildren()) do
+        if child:IsA("TextButton") then
+            totalHeight += child.AbsoluteSize.Y + UIListLayout.Padding.Offset
+        end
+    end
+    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+end
+
+-- Fungsi highlight tombol player
+local selectedButton = nil
+local defaultColor = Color3.fromRGB(70, 70, 70)
+local selectedColor = Color3.fromRGB(120, 0, 255)
+
+local function createPlayerButton(p)
+    local playerButton = Instance.new("TextButton")
+    playerButton.Size = UDim2.new(1, -10, 0, 30)
+    playerButton.Text = p.Name
+    playerButton.BackgroundColor3 = defaultColor
+    playerButton.TextColor3 = Color3.new(1, 1, 1)
+    playerButton.Font = Enum.Font.Gotham
+    playerButton.Parent = scrollingFrame
+
+    local corner = Instance.new("UICorner", playerButton)
+    corner.CornerRadius = UDim.new(0, 6)
+
+    playerButton.MouseButton1Click:Connect(function()
+        if selectedButton then
+            selectedButton.BackgroundColor3 = defaultColor
+        end
+        selectedButton = playerButton
+        playerButton.BackgroundColor3 = selectedColor
+
+        StarterGui:SetCore("ChatMakeSystemMessage", {
+            Text = "Memilih player: " .. p.Name,
+            Color = Color3.fromRGB(200, 200, 255),
+            Font = Enum.Font.SourceSansBold,
+            FontSize = Enum.FontSize.Size24
+        })
+    end)
+    
+    updateScrollSize()
+end
+
+-- Handler tombol chat
 buttonChat.MouseButton1Click:Connect(function()
-    -- Perbaikan: Menggunakan format yang benar untuk mengirim pesan
-    local success, errorMsg = pcall(function()
-        ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Hello dari Tombol GUI!", "All")
+    local chatSystem = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+    local success, err = pcall(function()
+        if chatSystem then
+            local sayMessage = chatSystem:FindFirstChild("SayMessageRequest")
+            if sayMessage then
+                sayMessage:FireServer("purplelzys", "All")
+                StarterGui:SetCore("ChatMakeSystemMessage", {
+                    Text = "Pesan berhasil dikirim!",
+                    Color = Color3.fromRGB(0, 255, 0),
+                    FontSize = Enum.FontSize.Size24
+                })
+            else
+                error("Komponen chat tidak ditemukan")
+            end
+        else
+            error("Sistem chat tidak tersedia")
+        end
     end)
     
     if not success then
-        warn("Gagal mengirim pesan: " .. errorMsg)
+        StarterGui:SetCore("ChatMakeSystemMessage", {
+            Text = "Error: " .. err,
+            Color = Color3.fromRGB(255, 0, 0),
+            FontSize = Enum.FontSize.Size24
+        })
     end
 end)
 
--- ... (bagian script lainnya tetap sama)
+-- Handler player join/leave
+local function playerAdded(p)
+    createPlayerButton(p)
+end
+
+local function playerRemoving(p)
+    for _, child in ipairs(scrollingFrame:GetChildren()) do
+        if child:IsA("TextButton") and child.Text == p.Name then
+            child:Destroy()
+            updateScrollSize()
+            break
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(playerAdded)
+Players.PlayerRemoving:Connect(playerRemoving)
+
+-- Inisialisasi player yang sudah ada
+for _, p in ipairs(Players:GetPlayers()) do
+    if p ~= player then
+        createPlayerButton(p)
+    end
+end
+
+-- Animasi hover untuk tombol
+local function buttonHoverEffect(button)
+    button.MouseEnter:Connect(function()
+        game:GetService("TweenService"):Create(
+            button,
+            TweenInfo.new(0.2),
+            {BackgroundTransparency = 0.2}
+        ):Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        game:GetService("TweenService"):Create(
+            button,
+            TweenInfo.new(0.2),
+            {BackgroundTransparency = 0}
+        ):Play()
+    end)
+end
+
+buttonHoverEffect(buttonChat)
+buttonHoverEffect(buttonGimmick)

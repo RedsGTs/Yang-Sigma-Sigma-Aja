@@ -1,24 +1,34 @@
--- AutoChatButton.local.lua
--- LocalScript dengan GUI tombol kirim chat
+-- Roblox Lua script to send a public chat message
+-- Compatible with Roblox executors (like Delta Executor Mobile)
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ChatEvent = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
+local message = "Hello" -- Customize this message
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+-- Function to send a chat message via the default chat event
+local function sendPublicMessage(msg)
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Buat GUI
-local screenGui = Instance.new("ScreenGui", playerGui)
-screenGui.Name = "ChatButtonGui"
+    local localPlayer = Players.LocalPlayer
+    if not localPlayer then
+        error("LocalPlayer not found!")
+        return
+    end
 
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 200, 0, 50)
-button.Position = UDim2.new(0.5, -100, 0.8, 0)
-button.Text = "Kirim Pesan!"
-button.Parent = screenGui
+    -- The 'DefaultChatSystemChatEvents' is the common event used to send chat messages
+    local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+    if not chatEvents then
+        error("Chat events not found in ReplicatedStorage!")
+        return
+    end
 
--- Fungsi kirim pesan
-button.MouseButton1Click:Connect(function()
-	ChatEvent:FireServer("Ini pesan dari tombol GUI!", "All")
-end)
+    local sayMessageEvent = chatEvents:FindFirstChild("SayMessageRequest")
+    if not sayMessageEvent then
+        error("SayMessageRequest event not found!")
+        return
+    end
+
+    -- Fire the server event to send the message to public chat
+    sayMessageEvent:FireServer(msg, "All")
+end
+
+sendPublicMessage(message)

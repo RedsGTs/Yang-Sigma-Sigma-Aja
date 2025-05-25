@@ -1,51 +1,28 @@
--- AutoChatManual.lua
--- This LocalScript simulates manual chat interaction in Roblox:
--- It "clicks" the chat icon, types a message, and sends it.
-
-local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
+-- Tunggu GUI chat muncul
 local StarterGui = game:GetService("StarterGui")
-
+local Players = game:GetService("Players")
 local player = Players.LocalPlayer
-local chatMessage = "Halo, ini pesan otomatis!"  -- Customize your message here
-local chatOpened = false
 
--- Function to open the chat window
-local function openChat()
-    -- This fires Roblox's Chat window open event
-    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, true)
-    StarterGui:SetCore("ChatMakeSystemMessage", {
-        Text = "Chat opening simulation initiated."
-    })
-    -- Roblox chat window can be opened by triggering the FocusChat event.
-    StarterGui:SetCore("FocusChat", true)
-    chatOpened = true
+-- Buka chat UI agar TextBox aktif
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, true)
+
+-- Fungsi auto-chat (khusus sistem TextChatService)
+local function autoChat(message)
+	local ChatInputBar = player.PlayerGui:FindFirstChild("Chat") and player.PlayerGui.Chat:FindFirstChild("TextBoxContainer") and player.PlayerGui.Chat.TextBoxContainer:FindFirstChildWhichIsA("TextBox")
+
+	if ChatInputBar then
+		ChatInputBar.Text = message
+		ChatInputBar:CaptureFocus() -- Fokus ke chat
+		wait(0.2)
+		-- Kirim enter key
+		local VirtualInputManager = game:GetService("VirtualInputManager")
+		VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+		VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+	end
 end
 
--- Function to simulate typing and sending message
-local function sendChatMessage(msg)
-    -- Use Roblox's default chat system to send the message
-    local ChatService = game:GetService("Chat")
-    ChatService:Chat(player.Character or player.CharacterAdded:Wait(), msg, Enum.ChatColor.Blue)
+-- Kirim berkali-kali
+while true do
+	autoChat("Halo semua dari auto chat Delta!")
+	wait(5)
 end
-
--- Function to simulate the manual process on key press
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-
-    if input.KeyCode == Enum.KeyCode.K then  -- When player presses K
-        -- Step 1: Open chat input box (like tapping chat icon)
-        openChat()
-
-        -- Wait a moment to simulate typing
-        wait(0.5)
-
-        -- Step 2: Send the chat message (simulate typing and press enter)
-        sendChatMessage(chatMessage)
-    end
-end)
-
--- Optional: Notify player script is loaded
-StarterGui:SetCore("ChatMakeSystemMessage", {
-    Text = "AutoChatManual.lua script loaded. Press 'K' to send automatic chat message."
-})

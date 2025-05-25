@@ -1,62 +1,86 @@
--- Robust Roblox Lua script for sending public messages in chat
--- For use in Delta Executor Mobile or other Roblox executors
+-- Roblox Lua script for Delta Executor Mobile
+-- Dynamically tries to find chat-related RemoteEvents to send a public chat message
 
-local message = "Hello from Delta Executor! This is a public message."
+local message = "Hello, this is a public chat message from Delta Executor!"
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ChatService = game:GetService("Chat")
 
 local localPlayer = Players.LocalPlayer
 if not localPlayer then
     error("LocalPlayer not found!")
 end
 
--- Wait for chat events
-local function waitForChatEvents()
-    local chatEvents
-    for i = 1, 10 do
-        chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-        if chatEvents then break end
-        wait(1)
+-- Helper function to check if an Instance name or class suggests it might be chat related
+local function isChatRelated(instance)
+    local name = instance.Name:lower()
+    if instance:IsA("RemoteEvent") or instance:IsA("RemoteFunction") then
+        if string.find(name, "chat") or string.find(name, "message") or string.find(name, "say") or string.find(name, "talk") then
+            return true
+        end
     end
-    return chatEvents
-end
-
--- Try to send message using DefaultChatSystemChatEvents
-local function sendViaDefaultChat(msg)
-    local chatEvents = waitForChatEvents()
-    if not chatEvents then
-        warn("DefaultChatSystemChatEvents not found in ReplicatedStorage.")
-        return false
-    end
-
-    local sayMessageEvent = chatEvents:FindFirstChild("SayMessageRequest")
-    if not sayMessageEvent then
-        warn("SayMessageRequest event not found in chat events.")
-        return false
-    end
-
-    -- Fire the server event to send the message in public chat
-    sayMessageEvent:FireServer(msg, "All")
-    return true
-end
-
--- Fallback: Use Chat:Chat to make message bubble (not always public chat)
-local function sendViaChatService(msg)
-    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-    if character and character:FindFirstChild("Head") then
-        ChatService:Chat(character.Head, msg, Enum.ChatColor.Blue)
-        return true
-    end
-    warn("Could not find character or Head for Chat:Chat fallback.")
     return false
 end
 
--- Try sending message via DefaultChatSystemChatEvents first
-local success = sendViaDefaultChat(message)
+-- Try firing a RemoteEvent with message, return true if no error
+local function tryFireRemoteEvent(event)
+    local success, err = pcall(function()
+        event:FireServer(message, "All")
+    end)
+    return success
+end
 
--- If that failed, fallback to Chat:Chat method
-if not success then
-    sendViaChatService(message)
+-- Recursively search for chat-related RemoteEvents in a given parent
+local function searchAndFireEvents(parent)
+    for _, child in pairs(parent:GetChildren()) do
+        if isChatRelated(child) then
+            print("Trying RemoteEvent/Function: "..child:GetFullName())
+            if child:IsA("RemoteEvent") then
+                local fired = tryFireRemoteEvent(child)
+                if fired then
+                    print("Message sent using:", child:GetFullName())
+                    return true
+                end
+            elseif child:IsA("RemoteFunction") then
+                local success, res = pcall(function()
+                    return child:InvokeServer(message, "All")
+                end)
+                if success then
+                    print("Message sent using RemoteFunction:", child:GetFullName())
+                    return true
+                end
+            end
+        end
+
+        -- Recursive search deeper
+        local found = searchAndFireEvents(child)
+        if found then
+            return true
+        end
+    end
+    return false
+end
+
+print("Starting dynamic chat event search...")
+local sent = false
+
+-- Search common places
+sent = searchAndFireEvents(ReplicatedStorage) or false
+if not sent then
+    -- Sometimes chat events can be under PlayerScripts or PlayerGui of localPlayer
+    if localPlayer:FindFirstChild("PlayerScripts") then
+        sent = searchAndFireEvents(localPlayer.PlayerScripts) or false
+    end
+end
+
+if not sent then
+    if localPlayer:FindFirstChild("PlayerGui") then
+        sent = searchAndFireEvents(localPlayer.PlayerGui) or false
+    end
+end
+
+if not sent then
+    print("No suitable chat event found or message could not be sent.")
+else
+    print("Public message sent successfully.")
 end

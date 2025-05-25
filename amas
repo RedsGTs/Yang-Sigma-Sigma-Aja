@@ -1,61 +1,45 @@
--- Services
-local Players = game:GetService("Players")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local player = Players.LocalPlayer
-
--- Buat GUI
-local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-ScreenGui.Name = "AutoChatGui"
-ScreenGui.ResetOnSpawn = false
-
+-- Buat Frame
 local Frame = Instance.new("Frame", ScreenGui)
 Frame.Size = UDim2.new(0, 300, 0, 100)
 Frame.Position = UDim2.new(0.5, -150, 0.8, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true -- Membuat frame bisa digeser
+Frame.Active = true -- Wajib untuk input
+Frame.Draggable = false -- Matikan bawaan draggable
 
-local TextBox = Instance.new("TextBox", Frame)
-TextBox.Size = UDim2.new(1, -20, 0, 40)
-TextBox.Position = UDim2.new(0, 10, 0, 10)
-TextBox.PlaceholderText = "Ketik pesan di sini"
-TextBox.Text = ""
-TextBox.TextScaled = true
-TextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+-- DRAG MANUAL SYSTEM
+local UserInputService = game:GetService("UserInputService")
+local dragging = false
+local dragInput, dragStart, startPos
 
-local Button = Instance.new("TextButton", Frame)
-Button.Size = UDim2.new(1, -20, 0, 30)
-Button.Position = UDim2.new(0, 10, 0, 60)
-Button.Text = "Kirim Pesan"
-Button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-Button.TextColor3 = Color3.new(1, 1, 1)
-Button.TextScaled = true
+Frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = Frame.Position
 
--- Fungsi kirim chat via simulasi enter
-local function sendChat(message)
-	-- Buka chat
-	VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Slash, false, game)
-	VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Slash, false, game)
-	wait(0.1)
-
-	-- Ketik karakter per karakter
-	for i = 1, #message do
-		local char = message:sub(i, i)
-		VirtualInputManager:SendTextInput(char, false)
-		wait(0.02)
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
 	end
+end)
 
-	wait(0.1)
-	-- Tekan Enter
-	VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-	VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-end
+Frame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
 
--- Saat tombol ditekan
-Button.MouseButton1Click:Connect(function()
-	local msg = TextBox.Text
-	if msg ~= "" then
-		sendChat(msg)
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		Frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
 	end
 end)

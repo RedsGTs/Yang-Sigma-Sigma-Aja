@@ -4,7 +4,7 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 -- u can modify this however you want! :)
 -- credits to infinite yield for serverhop function
 -- sub to my channel:
-setclipboard("https://youtube.com/@menace_on_top_fr")
+setclipboard("@Purplelzy")
 
 local function prompt(title, text)
     local ScreenGui = Instance.new("ScreenGui")
@@ -255,7 +255,7 @@ local function sh()
     end
 end
 
-local v = 1233
+local v = 1273
 local isOld = game.PlaceVersion <= v
 local isBloodMoon = checkBloodMoon()
 
@@ -272,7 +272,7 @@ if isOld and isBloodMoon then
     nt("Perfect Server!", "Old version ("..game.PlaceVersion..") + Blood Moon active!")
 elseif isOld and not isBloodMoon then
     nt("Old Server!", "Version: "..game.PlaceVersion)
-    local e = prompt("OLD SERVER DETECTED", "This is an old server but there's no Bloodmoon. Would you like to server-hop? Click No if you want to wait for Bloodmoon!")
+    local e = prompt("OLD SERVER DETECTED")
     if e then
         nt("Server-hop accepted.", "Looking for another server...")
         local success = sh()

